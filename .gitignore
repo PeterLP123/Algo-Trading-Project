@@ -1,0 +1,29 @@
+# Data files
+data/
+*.parquet
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.env
+
+# OS
+.DS_Store
+
+CLAUDE.md
