@@ -36,9 +36,8 @@ def compute_half_spread_frac(
     for s in symbols:
         ar_cols.append(abdi_ranaldo_spread(cleaned_frames[s]).reindex(asset_panel_slice.index))
     ar_wide = pd.concat(ar_cols, axis=1, keys=symbols)
-    close_px = asset_panel_slice["close"]
     half_spread = 0.5 * ar_wide
-    return half_spread.shift(1).divide(close_px.shift(1)).replace([np.inf, -np.inf], np.nan)
+    return half_spread.shift(1).replace([np.inf, -np.inf], np.nan)
 
 
 def make_rebalance_mask(index: pd.Index, every: int) -> pd.Series:
@@ -223,6 +222,12 @@ def run_net_backtest(
     delta_theta_exec = pd.DataFrame(0.0, index=r.index, columns=symbols)
 
     zero_row = pd.Series(0.0, index=symbols, dtype=float)
+
+    # --- Circuit breaker: liquidate if equity hits zero ---
+    equity_running = v0
+    liquidated = False
+    liquidated_at = None
+
     for i in range(len(r.index)):
         if i == 0:
             carried_t = zero_row
@@ -233,7 +238,11 @@ def run_net_backtest(
 
         carried.iloc[i] = carried_t.to_numpy(dtype=float)
 
-        if rebalance_mask.iat[i]:
+        # Circuit breaker: force flat if equity was wiped out
+        if liquidated:
+            exec_t = zero_row
+            delta_t = zero_row - carried_t
+        elif rebalance_mask.iat[i]:
             target_t = theta_target.iloc[i].fillna(0.0)
             delta_t = target_t - carried_t
             exec_t = target_t
@@ -243,6 +252,18 @@ def run_net_backtest(
 
         delta_theta_exec.iloc[i] = delta_t.to_numpy(dtype=float)
         theta_exec.iloc[i] = exec_t.to_numpy(dtype=float)
+
+        # Update running equity and check circuit breaker
+        if i > 0:
+            bar_gross = float((theta_exec.iloc[i - 1] * r.iloc[i]).sum())
+        else:
+            bar_gross = 0.0
+        bar_cost = float((delta_theta_exec.iloc[i].abs() * half_spread_frac.iloc[i]).sum())
+        equity_running += bar_gross - bar_cost
+
+        if not liquidated and equity_running <= 0:
+            liquidated = True
+            liquidated_at = r.index[i]
 
     gross_pnl = (theta_exec.shift(1).fillna(0.0) * r).sum(axis=1).fillna(0.0)
     turnover = delta_theta_exec.abs().sum(axis=1)
@@ -277,6 +298,7 @@ def run_net_backtest(
         "turnover": turnover,
         "cost_t": cost_t,
         "r": r,
+        "liquidated_at": liquidated_at,
     }
 
 
