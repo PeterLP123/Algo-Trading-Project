@@ -41,11 +41,23 @@ def compute_half_spread_frac(
     return half_spread.shift(1).divide(close_px.shift(1)).replace([np.inf, -np.inf], np.nan)
 
 
-def apply_rebalance_theta(theta: pd.DataFrame, every: int) -> pd.DataFrame:
+def make_rebalance_mask(index: pd.Index, every: int) -> pd.Series:
+    if every <= 1:
+        return pd.Series(True, index=index, name="is_rebalance")
+    pos = np.arange(len(index))
+    return pd.Series((pos % every) == 0, index=index, name="is_rebalance")
+
+
+def apply_rebalance_theta(
+    theta: pd.DataFrame,
+    every: int,
+    rebalance_mask: pd.Series | None = None,
+) -> pd.DataFrame:
     if every <= 1:
         return theta
-    pos = np.arange(len(theta))
-    hold = (pos % every) != 0
+    if rebalance_mask is None:
+        rebalance_mask = make_rebalance_mask(theta.index, every)
+    hold = ~rebalance_mask.to_numpy(dtype=bool)
     # Explicit writable copy: theta.copy() can leave read-only blocks (CoW / Arrow).
     arr = np.array(theta.to_numpy(), copy=True, dtype=float)
     arr[hold, :] = np.nan
@@ -63,9 +75,10 @@ def build_signal_and_theta(
     signal_clip: float,
     gross_cap: float,
     rebalance_every: int,
-) -> pd.DataFrame:
+    return_details: bool = False,
+) -> pd.DataFrame | dict[str, pd.DataFrame | pd.Series]:
     close_px = asset_panel_slice["close"]
-    ma50_list, trend_raw_list, vol_20_list, signal_strength_list, trend_position_list = [], [], [], [], []
+    ma50_list, trend_raw_list, vol_20_list, z_list, trend_position_list = [], [], [], [], []
 
     for s in symbols:
         c = close_px[s]
@@ -73,13 +86,14 @@ def build_signal_and_theta(
         trend_raw = c / ma_n - 1
         ret = c.pct_change()
         vol_20 = ret.rolling(vol_window, min_periods=vol_window).std(ddof=0).replace(0.0, np.nan)
-        signal_strength = (trend_raw / vol_20).clip(-signal_clip, signal_clip)
-        tp = np.where(signal_strength > dead_zone, 1.0, np.where(signal_strength < -dead_zone, -1.0, 0.0))
-        trend_position = pd.Series(tp, index=c.index, dtype=float).where(signal_strength.notna(), np.nan)
+        # z: activation / diagnostics only; not used as dollar-sizing input
+        z = (trend_raw / vol_20).clip(-signal_clip, signal_clip)
+        tp = np.where(z > dead_zone, 1.0, np.where(z < -dead_zone, -1.0, 0.0))
+        trend_position = pd.Series(tp, index=c.index, dtype=float).where(z.notna(), np.nan)
         ma50_list.append(ma_n.rename(s))
         trend_raw_list.append(trend_raw.rename(s))
         vol_20_list.append(vol_20.rename(s))
-        signal_strength_list.append(signal_strength.rename(s))
+        z_list.append(z.rename(s))
         trend_position_list.append(trend_position.rename(s))
 
     mi = pd.MultiIndex.from_product
@@ -92,56 +106,171 @@ def build_signal_and_theta(
             _field_wide("ma", ma50_list),
             _field_wide("trend_raw", trend_raw_list),
             _field_wide("vol_20", vol_20_list),
-            _field_wide("signal_strength", signal_strength_list),
+            _field_wide("z", z_list),
             _field_wide("trend_position", trend_position_list),
         ],
         axis=1,
     ).sort_index(axis=1)
 
-    ss = signal_panel["signal_strength"]
-    pos = signal_panel["trend_position"]
+    z = signal_panel["z"]
+    tr = signal_panel["trend_raw"]
     vol = signal_panel["vol_20"]
-    active = (pos != 0) & pos.notna()
-    w_raw = ss.where(active, 0.0)
+    # z dead-zone only; w_risk = w_raw / vol_20 is the single vol-adjusted sizing step
+    active = (z.abs() > dead_zone) & z.notna()
+    w_raw = tr.where(active, 0.0)
     sigma = vol.replace(0.0, np.nan)
     w_risk = w_raw / sigma
     denom = w_risk.abs().sum(axis=1)
     denom_safe = denom.replace(0.0, np.nan)
     w_tilde = w_risk.div(denom_safe, axis=0).fillna(0.0)
-    theta = gross_cap * w_tilde
-    theta = apply_rebalance_theta(theta, rebalance_every)
+    theta_target = gross_cap * w_tilde
+    rebalance_mask = make_rebalance_mask(theta_target.index, rebalance_every)
+    theta = apply_rebalance_theta(theta_target, rebalance_every, rebalance_mask=rebalance_mask)
+    theta.attrs["theta_target"] = theta_target.copy()
+    theta.attrs["rebalance_mask"] = rebalance_mask.copy()
+    theta.attrs["rebalance_every"] = rebalance_every
+    if return_details:
+        return {
+            "theta_target": theta_target,
+            "theta": theta,
+            "rebalance_mask": rebalance_mask,
+        }
     return theta
+
+
+def _print_execution_diagnostics(
+    theta_target: pd.DataFrame,
+    theta_exec: pd.DataFrame,
+    carried: pd.DataFrame,
+    delta_theta_exec: pd.DataFrame,
+    turnover: pd.Series,
+    cost_t: pd.Series,
+    rebalance_mask: pd.Series,
+    diagnostic_rows: int,
+) -> None:
+    window = max(int(diagnostic_rows), 2)
+    end = min(len(theta_target), window)
+    diag = pd.concat(
+        {
+            "theta_target": theta_target.iloc[:end],
+            "theta_exec": theta_exec.iloc[:end],
+            "carried": carried.iloc[:end],
+            "delta_theta_exec": delta_theta_exec.iloc[:end],
+        },
+        axis=1,
+    )
+    diag["is_rebalance"] = rebalance_mask.iloc[:end]
+    diag["turnover"] = turnover.iloc[:end]
+    diag["cost_t"] = cost_t.iloc[:end]
+
+    print("Execution diagnostics sample:")
+    print(diag.round(6).to_string())
 
 
 def run_net_backtest(
     asset_panel_slice: pd.DataFrame,
-    theta: pd.DataFrame,
+    theta: pd.DataFrame | dict[str, pd.DataFrame | pd.Series],
     symbols: list[str],
     half_spread_frac: pd.DataFrame,
     *,
+    rebalance_every: int = 1,
+    print_diagnostics: bool = False,
+    diagnostic_rows: int = 6,
+    print_diagnostic: bool | None = None,
+    diagnostic_window: int | None = None,
     backtest_use_excess: bool = False,
     v0: float = 10_000.0,
-) -> dict[str, pd.Series]:
+) -> dict[str, pd.DataFrame | pd.Series]:
+    if print_diagnostic is not None:
+        print_diagnostics = print_diagnostic
+    if diagnostic_window is not None:
+        diagnostic_rows = diagnostic_window
+
     if backtest_use_excess:
         r = asset_panel_slice["excess_return"]
     else:
         r = asset_panel_slice["close"].pct_change()
 
-    theta_exec = theta.shift(1)
-    gross_pnl = (theta_exec * r).sum(axis=1).fillna(0.0)
+    r = r.reindex(columns=symbols).astype(float).fillna(0.0)
+    half_spread_frac = half_spread_frac.reindex(index=r.index, columns=symbols).astype(float).fillna(0.0)
 
-    theta_prev = theta.shift(1)
-    r_lag = r.shift(1)
-    carried = theta_prev * (1.0 + r_lag)
-    delta_theta = theta - carried
-    turnover = delta_theta.abs().sum(axis=1)
-    cost_t = (delta_theta.abs() * half_spread_frac).sum(axis=1).fillna(0.0)
+    if isinstance(theta, dict):
+        theta_target = theta.get("theta_target")
+        theta_ffill = theta.get("theta")
+        rebalance_mask = theta.get("rebalance_mask")
+        if theta_target is None:
+            if theta_ffill is None:
+                raise KeyError("theta bundle must include at least one of 'theta_target' or 'theta'")
+            theta_target = theta_ffill
+        if rebalance_mask is None:
+            rebalance_mask = make_rebalance_mask(theta_target.index, rebalance_every)
+    else:
+        theta_target = theta.attrs.get("theta_target", theta)
+        theta_ffill = theta
+        rebalance_mask = theta.attrs.get("rebalance_mask")
+        rebalance_every = int(theta.attrs.get("rebalance_every", rebalance_every))
+        if rebalance_mask is None:
+            rebalance_mask = make_rebalance_mask(theta.index, rebalance_every)
+
+    theta_target = theta_target.reindex(index=r.index, columns=symbols).astype(float).fillna(0.0)
+    if theta_ffill is None:
+        theta_ffill = apply_rebalance_theta(theta_target, rebalance_every, rebalance_mask=rebalance_mask)
+    theta_ffill = theta_ffill.reindex(index=r.index, columns=symbols).astype(float).ffill().fillna(0.0)
+    rebalance_mask = rebalance_mask.reindex(r.index).fillna(False).astype(bool)
+
+    theta_exec = pd.DataFrame(0.0, index=r.index, columns=symbols)
+    carried = pd.DataFrame(0.0, index=r.index, columns=symbols)
+    delta_theta_exec = pd.DataFrame(0.0, index=r.index, columns=symbols)
+
+    zero_row = pd.Series(0.0, index=symbols, dtype=float)
+    for i in range(len(r.index)):
+        if i == 0:
+            carried_t = zero_row
+        else:
+            prev_exec = theta_exec.iloc[i - 1]
+            prev_return = r.iloc[i - 1]
+            carried_t = prev_exec * (1.0 + prev_return)
+
+        carried.iloc[i] = carried_t.to_numpy(dtype=float)
+
+        if rebalance_mask.iat[i]:
+            target_t = theta_target.iloc[i].fillna(0.0)
+            delta_t = target_t - carried_t
+            exec_t = target_t
+        else:
+            delta_t = zero_row
+            exec_t = carried_t
+
+        delta_theta_exec.iloc[i] = delta_t.to_numpy(dtype=float)
+        theta_exec.iloc[i] = exec_t.to_numpy(dtype=float)
+
+    gross_pnl = (theta_exec.shift(1).fillna(0.0) * r).sum(axis=1).fillna(0.0)
+    turnover = delta_theta_exec.abs().sum(axis=1)
+    cost_t = (delta_theta_exec.abs() * half_spread_frac).sum(axis=1).fillna(0.0)
 
     net_pnl = gross_pnl - cost_t
     cumulative_net_pnl = net_pnl.cumsum()
     net_portfolio_value = v0 + cumulative_net_pnl
 
+    if print_diagnostics:
+        _print_execution_diagnostics(
+            theta_target=theta_target,
+            theta_exec=theta_exec,
+            carried=carried,
+            delta_theta_exec=delta_theta_exec,
+            turnover=turnover,
+            cost_t=cost_t,
+            rebalance_mask=rebalance_mask,
+            diagnostic_rows=diagnostic_rows,
+        )
+
     return {
+        "theta_target": theta_target,
+        "theta": theta_ffill,
+        "theta_exec": theta_exec,
+        "carried": carried,
+        "delta_theta_exec": delta_theta_exec,
+        "rebalance_mask": rebalance_mask,
         "gross_pnl": gross_pnl,
         "net_pnl": net_pnl,
         "net_portfolio_value": net_portfolio_value,
