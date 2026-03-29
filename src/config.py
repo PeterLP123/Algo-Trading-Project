@@ -39,7 +39,7 @@ DEAD_ZONE  = 0.25   # threshold on z for long/short/flat activation
 SIGNAL_CLIP = 5.0
 
 # ── Position sizing (Cell 21) ────────────────────────────────────────────────
-GROSS_CAP = 50_000.0  # fixed gross notional budget (sum |theta_i| = GROSS_CAP when active)
+GROSS_CAP = 100_000.0  # fixed gross notional budget (sum |theta_i| = GROSS_CAP when active)
 
 # ── Backtest (Cell 23) ───────────────────────────────────────────────────────
 BACKTEST_USE_EXCESS = False   # True → use excess_return instead of simple returns
