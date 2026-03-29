@@ -6,10 +6,10 @@ The run_pipeline.py orchestrator reads from here and passes values as
 explicit arguments to each module function.
 
 Cell-to-config mapping:
-  Cell 1  → MPL_RC_PARAMS (plt.rcParams block from Cell 11, applied at startup)
+  Cell 1  → Plot export/theme settings
   Cell 4  → SYMBOLS, TIMEFRAME, SINCE, UNTIL, DATA_DIR
   Cell 8  → VALUE_COLUMNS, PANDAS_FREQ
-  Cell 11 → MPL_RC_PARAMS
+  Cell 11 → COLORS, COLOR_SEQUENCE, PLOTLY_TEMPLATE, EXPORT_FORMATS
   Cell 15 → HOLDOUT_FRAC, INITIAL_TRAIN_BARS, VAL_BARS, STEP_BARS, WF_MODE, TRAIN_BARS
   Cell 18 → MA_WINDOW, VOL_WINDOW, DEAD_ZONE, SIGNAL_CLIP
   Cell 21 → GROSS_CAP
@@ -19,6 +19,8 @@ Cell-to-config mapping:
 """
 
 from pathlib import Path
+
+import plotly.graph_objects as go
 
 # ── Data download (Cell 4) ────────────────────────────────────────────────────
 SYMBOLS    = ["BTC/USDT", "ETH/USDT", "BNB/USDT", "ADA/USDT"]
@@ -64,31 +66,64 @@ VOL_GRID          = [20, 30]
 THRESH_GRID       = [0.25, 0.5]
 REBAL_GRID        = [1, 3]
 
-# ── Plot colours and line styles (shared by all visualization modules) ────────
-C_LONG    = "#2ca02c"   # green  — long-position shading
-C_SHORT   = "#d62728"   # red    — short-position shading
-C_CLOSE   = "0.15"      # near-black — price / close line
-C_MA      = "tab:blue"  # moving average line
-C_GROSS   = "tab:blue"  # gross PnL line
-C_NET     = "tab:green" # net PnL / equity line
-C_COST    = "tab:red"   # cost fill / line
-C_BH      = "tab:blue"  # buy-and-hold benchmark line
-C_ZERO    = "0.4"       # zero / baseline reference lines
-GRID_LW   = 0.7         # grid linewidth
-GRID_ALPHA = 0.4        # grid alpha
-
-# ── Matplotlib style (Cell 11) ───────────────────────────────────────────────
-MPL_RC_PARAMS = {
-    "figure.dpi":             500,
-    "savefig.dpi":            500,
-    "font.family":            "serif",
-    "font.size":              10,
-    "axes.titlesize":         10,
-    "axes.labelsize":         10,
-    "xtick.labelsize":        9,
-    "ytick.labelsize":        9,
-    "legend.fontsize":        9,
-    "legend.title_fontsize":  9,
-    "axes.spines.top":        False,
-    "axes.spines.right":      False,
+# ── Plot theme (shared by all visualization modules) ─────────────────────────
+COLORS = {
+    "long": "#00C853",
+    "short": "#FF1744",
+    "net": "#2962FF",
+    "gross": "#6200EA",
+    "cost": "#FF6D00",
+    "benchmark": "#78909C",
+    "close": "#263238",
+    "ma": "#00ACC1",
+    "zero": "#9E9E9E",
+    "turnover": "#455A64",
 }
+
+COLOR_SEQUENCE = [
+    COLORS["net"],
+    COLORS["gross"],
+    COLORS["ma"],
+    COLORS["long"],
+    COLORS["cost"],
+    COLORS["benchmark"],
+]
+
+EXPORT_FORMATS = ["html", "png", "pdf"]
+
+PLOTLY_TEMPLATE = go.layout.Template(
+    layout=go.Layout(
+        colorway=COLOR_SEQUENCE,
+        font={"family": "Open Sans, Arial, sans-serif", "size": 13, "color": COLORS["close"]},
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        title={"x": 0.02, "xanchor": "left", "font": {"size": 20}},
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "left",
+            "x": 0.0,
+            "bgcolor": "rgba(255,255,255,0.85)",
+        },
+        margin={"l": 72, "r": 36, "t": 72, "b": 56},
+        hovermode="x unified",
+        xaxis={
+            "showline": False,
+            "showgrid": False,
+            "zeroline": False,
+            "ticks": "outside",
+            "tickcolor": "#B0BEC5",
+        },
+        yaxis={
+            "showline": False,
+            "showgrid": True,
+            "gridcolor": "#CFD8DC",
+            "griddash": "dot",
+            "gridwidth": 1,
+            "zeroline": False,
+            "ticks": "outside",
+            "tickcolor": "#B0BEC5",
+        },
+    )
+)

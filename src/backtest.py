@@ -11,15 +11,16 @@ Functions:
   plot_backtest_results(results, output_dir)
     2-row figure: (1) cumulative gross vs net PnL,
                   (2) daily turnover and cost.
-    Saves net_vs_gross_cost_turnover.pdf and .png.
+    Saves net_vs_gross_cost_turnover.html/.pdf/.png.
 """
 
-import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from src.helpers import abdi_ranaldo_spread, run_net_backtest
 from src import config
-from src.utils import display_df, format_date_axis, save_fig
+from src.utils import display_df, save_plotly_fig
 
 
 def run_baseline_backtest(
@@ -127,31 +128,88 @@ def plot_backtest_results(results, output_dir):
     cost_t               = results["cost_t"]
     turnover             = results["turnover"]
 
-    fig, axes = plt.subplots(2, 1, figsize=(12, 7), sharex=True)
-    axes[0].plot(net_backtest_summary.index, cumulative_gross_pnl, color=config.C_GROSS, linewidth=0.9, label="Cumulative gross PnL")
-    axes[0].plot(net_backtest_summary.index, cumulative_net_pnl,   color=config.C_NET,   linewidth=0.9, label="Cumulative net PnL")
-    axes[0].axhline(0.0, color=config.C_ZERO, linewidth=0.7, linestyle="--", alpha=0.7)
-    axes[0].set_ylabel("USDT")
-    axes[0].legend(loc="upper left", frameon=False)
-    axes[0].set_title("Gross vs net cumulative PnL")
-    axes[0].grid(True, axis="y", linestyle=":", linewidth=config.GRID_LW, alpha=config.GRID_ALPHA)
-
-    axes[1].fill_between(
-        net_backtest_summary.index, 0.0, cost_t,
-        step="mid", color=config.C_COST, alpha=0.35, linewidth=0,
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.1,
+        subplot_titles=(
+            "Gross vs Net Cumulative PnL",
+            "Daily Turnover and Transaction Cost",
+        ),
+        specs=[[{}], [{"secondary_y": True}]],
     )
-    axes[1].plot(net_backtest_summary.index, turnover, color="0.2", linewidth=0.5, alpha=0.65, label="Turnover (USDT)")
-    ax_r = axes[1].twinx()
-    ax_r.plot(net_backtest_summary.index, cost_t, color=config.C_COST, linewidth=0.65, alpha=0.85, label="Cost (USDT)")
-    axes[1].set_ylabel("Turnover (USDT)")
-    ax_r.set_ylabel("Cost (USDT)")
-    axes[1].set_title("Daily rebalancing turnover and transaction cost")
-    lines, labels   = axes[1].get_legend_handles_labels()
-    lines2, labels2 = ax_r.get_legend_handles_labels()
-    ax_r.legend(lines + lines2, labels + labels2, loc="upper left", frameon=False, fontsize=8)
-    axes[1].grid(True, axis="y", linestyle=":", linewidth=config.GRID_LW, alpha=config.GRID_ALPHA)
-    for ax in axes:
-        format_date_axis(ax)
-    plt.tight_layout()
 
-    save_fig(fig, "net_vs_gross_cost_turnover", output_dir)
+    fig.add_trace(
+        go.Scatter(
+            x=net_backtest_summary.index,
+            y=cumulative_gross_pnl,
+            mode="lines",
+            name="Cumulative gross PnL",
+            line={"color": config.COLORS["gross"], "width": 2},
+            hovertemplate="%{x|%Y-%m-%d}<br>Gross PnL: %{y:,.2f} USDT<extra></extra>",
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=net_backtest_summary.index,
+            y=cumulative_net_pnl,
+            mode="lines",
+            name="Cumulative net PnL",
+            line={"color": config.COLORS["net"], "width": 2},
+            hovertemplate="%{x|%Y-%m-%d}<br>Net PnL: %{y:,.2f} USDT<extra></extra>",
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_hline(
+        y=0.0,
+        line_dash="dash",
+        line_color=config.COLORS["zero"],
+        line_width=1.1,
+        row=1,
+        col=1,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=net_backtest_summary.index,
+            y=turnover,
+            mode="lines",
+            name="Turnover (USDT)",
+            line={"color": config.COLORS["turnover"], "width": 1.7},
+            fill="tozeroy",
+            fillcolor="rgba(69, 90, 100, 0.18)",
+            hovertemplate="%{x|%Y-%m-%d}<br>Turnover: %{y:,.2f} USDT<extra></extra>",
+        ),
+        row=2,
+        col=1,
+        secondary_y=False,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=net_backtest_summary.index,
+            y=cost_t,
+            mode="lines",
+            name="Cost (USDT)",
+            line={"color": config.COLORS["cost"], "width": 2},
+            hovertemplate="%{x|%Y-%m-%d}<br>Cost: %{y:,.2f} USDT<extra></extra>",
+        ),
+        row=2,
+        col=1,
+        secondary_y=True,
+    )
+
+    fig.update_layout(
+        title="Backtest Results",
+        width=1200,
+        height=780,
+    )
+    fig.update_xaxes(tickformat="%Y", row=2, col=1, title_text="Date")
+    fig.update_yaxes(title_text="USDT", row=1, col=1)
+    fig.update_yaxes(title_text="Turnover (USDT)", row=2, col=1, secondary_y=False)
+    fig.update_yaxes(title_text="Cost (USDT)", row=2, col=1, secondary_y=True)
+
+    save_plotly_fig(fig, "net_vs_gross_cost_turnover", output_dir)

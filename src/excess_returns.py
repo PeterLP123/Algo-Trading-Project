@@ -7,17 +7,16 @@ Functions:
     mutate cleaned_frames in-place (adds rf_daily and excess_return cols).
     Returns (cleaned_frames, excess_returns_df, rf_daily).
 
-  plot_excess_returns(excess_returns_df, output_dir, mpl_rc_params=None)
-    Line plot of daily excess returns for all assets.
-    Saves as daily_excess_returns.pdf and .png.
+  plot_excess_returns(excess_returns_df, output_dir)
+    Interactive Plotly line chart of daily excess returns for all assets.
+    Saves as daily_excess_returns.html/.pdf/.png.
 """
 
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.ticker import PercentFormatter
+import plotly.graph_objects as go
 
-from .utils import save_fig
+from . import config
+from .utils import save_plotly_fig
 
 
 def compute_excess_returns(cleaned_frames, dff, symbols):
@@ -56,41 +55,51 @@ def compute_excess_returns(cleaned_frames, dff, symbols):
     return cleaned_frames, excess_returns_df, rf_daily
 
 
-def plot_excess_returns(excess_returns_df, output_dir, mpl_rc_params=None):
-    """Plot daily excess returns for all assets and save to PDF/PNG.
-
-    Args:
-        excess_returns_df : wide DataFrame, one column per symbol
-        output_dir        : Path — where to save the figures
-        mpl_rc_params     : optional dict passed to plt.rcParams.update()
-    """
-    if mpl_rc_params is not None:
-        plt.rcParams.update(mpl_rc_params)
-
-    colors = plt.get_cmap("tab10").colors
-
-    fig, ax = plt.subplots(figsize=(6.5, 3.4), constrained_layout=True)
+def plot_excess_returns(excess_returns_df, output_dir):
+    """Plot daily excess returns for all assets and save to HTML/PDF/PNG."""
+    fig = go.Figure()
 
     for i, col in enumerate(excess_returns_df.columns):
-        c = colors[i % len(colors)]
-        ax.plot(
-            excess_returns_df.index,
-            excess_returns_df[col],
-            color=c,
-            linewidth=0.65,
-            alpha=0.55,
-            label=col,
+        fig.add_trace(
+            go.Scatter(
+                x=excess_returns_df.index,
+                y=excess_returns_df[col],
+                mode="lines",
+                name=col,
+                line={
+                    "width": 1.5,
+                    "color": config.COLOR_SEQUENCE[i % len(config.COLOR_SEQUENCE)],
+                },
+                opacity=0.8,
+                hovertemplate="%{x|%Y-%m-%d}<br>"
+                + f"{col}: "
+                + "%{y:.2%}<extra></extra>",
+            )
         )
 
-    ax.axhline(0.0, color="0.3", linewidth=0.9, linestyle="--", alpha=0.9)
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Excess return")
-    ax.yaxis.set_major_formatter(PercentFormatter(xmax=1.0, decimals=0))
-    ax.xaxis.set_major_locator(mdates.YearLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-    ax.grid(True, axis="y", linestyle=":", linewidth=0.7, alpha=0.4)
-    ax.grid(False, axis="x")
+    fig.add_hline(
+        y=0.0,
+        line_dash="dash",
+        line_color=config.COLORS["zero"],
+        line_width=1.2,
+    )
+    fig.update_layout(
+        title="Daily Excess Returns by Asset",
+        xaxis_title="Date",
+        yaxis_title="Excess return",
+        width=1000,
+        height=460,
+        legend={
+            "title": {"text": "Asset"},
+            "orientation": "v",
+            "x": 1.02,
+            "xanchor": "left",
+            "y": 1.0,
+            "yanchor": "top",
+        },
+        margin={"r": 140},
+    )
+    fig.update_xaxes(dtick="M12", tickformat="%Y")
+    fig.update_yaxes(tickformat=".0%")
 
-    ax.legend(title="Asset", loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False)
-
-    save_fig(fig, "daily_excess_returns", output_dir)
+    save_plotly_fig(fig, "daily_excess_returns", output_dir)

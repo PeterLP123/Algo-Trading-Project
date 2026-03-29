@@ -6,13 +6,14 @@ Function:
     2-row figure:
       (1) Net portfolio value over OOS period vs V0 baseline.
       (2) Cumulative return (%) of strategy vs equal-weight buy & hold.
-    Saves oos_performance.pdf and .png.
+    Saves oos_performance.html/.pdf/.png.
 """
 
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from src import config
-from src.utils import save_fig
+from src.utils import save_plotly_fig
 
 
 def plot_oos_performance(net_pv_h, holdout_index, asset_panel, v0, output_dir):
@@ -35,36 +36,80 @@ def plot_oos_performance(net_pv_h, holdout_index, asset_panel, v0, output_dir):
     ew_daily    = r_h.mean(axis=1).reindex(eq_oos_plot.index).fillna(0.0)
     cum_ew_bh   = (1.0 + ew_daily).cumprod() - 1.0
 
-    fig_oos, axes_oos = plt.subplots(2, 1, figsize=(12, 7), sharex=True, constrained_layout=True)
-
-    axes_oos[0].plot(eq_oos_plot.index, eq_oos_plot, color=config.C_NET, linewidth=1.0, label="Net equity")
-    axes_oos[0].axhline(
-        v0, color="0.5", linestyle="--", linewidth=0.8, alpha=0.7, label=f"V0 = {v0:,.0f} USDT"
+    fig_oos = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.1,
+        subplot_titles=(
+            "Out-of-sample Net Portfolio Value",
+            "OOS Cumulative Return vs Equal-Weight Buy & Hold",
+        ),
     )
-    axes_oos[0].set_ylabel("USDT")
-    axes_oos[0].set_title("Out-of-sample: net portfolio value (frozen WF parameters)")
-    axes_oos[0].legend(loc="best", frameon=False)
-    axes_oos[0].grid(True, axis="y", linestyle=":", linewidth=config.GRID_LW, alpha=config.GRID_ALPHA)
 
-    axes_oos[1].plot(
-        cum_ret_oos.index, cum_ret_oos * 100.0,
-        color=config.C_NET, linewidth=1.0,
-        label="Strategy (OOS, from first OOS day)",
+    fig_oos.add_trace(
+        go.Scatter(
+            x=eq_oos_plot.index,
+            y=eq_oos_plot,
+            mode="lines",
+            name="Net equity",
+            line={"color": config.COLORS["net"], "width": 2.2},
+            hovertemplate="%{x|%Y-%m-%d}<br>Net equity: %{y:,.2f} USDT<extra></extra>",
+        ),
+        row=1,
+        col=1,
     )
-    axes_oos[1].plot(
-        cum_ew_bh.index, cum_ew_bh * 100.0,
-        color=config.C_BH, linewidth=0.9, alpha=0.85,
-        label="Equal-weight buy & hold (same assets)",
+    fig_oos.add_hline(
+        y=v0,
+        line_dash="dash",
+        line_color=config.COLORS["zero"],
+        line_width=1.1,
+        annotation_text=f"V0 = {v0:,.0f} USDT",
+        annotation_position="top left",
+        row=1,
+        col=1,
     )
-    axes_oos[1].axhline(0.0, color=config.C_ZERO, linewidth=0.7, linestyle="--", alpha=0.7)
-    axes_oos[1].set_ylabel("Cumulative return (%)")
-    axes_oos[1].set_xlabel("Date")
-    axes_oos[1].set_title("OOS cumulative return (normalized to first OOS day = 0%)")
-    axes_oos[1].legend(loc="best", frameon=False)
-    axes_oos[1].grid(True, axis="y", linestyle=":", linewidth=config.GRID_LW, alpha=config.GRID_ALPHA)
-    import matplotlib.dates as mdates
-    axes_oos[0].xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
-    axes_oos[1].xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
-    plt.setp(axes_oos[1].xaxis.get_majorticklabels(), rotation=25, ha="right")
 
-    save_fig(fig_oos, "oos_performance", output_dir)
+    fig_oos.add_trace(
+        go.Scatter(
+            x=cum_ret_oos.index,
+            y=cum_ret_oos,
+            mode="lines",
+            name="Strategy (OOS)",
+            line={"color": config.COLORS["net"], "width": 2.2},
+            hovertemplate="%{x|%Y-%m-%d}<br>Strategy: %{y:.2%}<extra></extra>",
+        ),
+        row=2,
+        col=1,
+    )
+    fig_oos.add_trace(
+        go.Scatter(
+            x=cum_ew_bh.index,
+            y=cum_ew_bh,
+            mode="lines",
+            name="Equal-weight buy & hold",
+            line={"color": config.COLORS["benchmark"], "width": 2, "dash": "dash"},
+            hovertemplate="%{x|%Y-%m-%d}<br>Benchmark: %{y:.2%}<extra></extra>",
+        ),
+        row=2,
+        col=1,
+    )
+    fig_oos.add_hline(
+        y=0.0,
+        line_dash="dash",
+        line_color=config.COLORS["zero"],
+        line_width=1.1,
+        row=2,
+        col=1,
+    )
+
+    fig_oos.update_layout(
+        title="Out-of-Sample Performance",
+        width=1200,
+        height=780,
+    )
+    fig_oos.update_xaxes(tickformat="%Y-%m", title_text="Date", row=2, col=1)
+    fig_oos.update_yaxes(title_text="USDT", row=1, col=1)
+    fig_oos.update_yaxes(title_text="Cumulative return", tickformat=".0%", row=2, col=1)
+
+    save_plotly_fig(fig_oos, "oos_performance", output_dir)

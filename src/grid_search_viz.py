@@ -6,16 +6,15 @@ Function:
     Produces two figures:
       1. 2×2 heatmap grid (DEAD_ZONE × rebalance_every) of wf_score.
       2. Horizontal bar chart ranking all grid points.
-    Saves wf_grid_search_heatmaps.pdf/.png and wf_grid_search_ranking.pdf/.png.
+    Saves HTML/PDF/PNG outputs for both figures.
 """
 
-from itertools import product
-
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import Normalize
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-from src.utils import save_fig
+from src import config
+from src.utils import save_plotly_fig
 
 
 def plot_grid_search(wf_search_df, thresh_grid, rebal_grid, output_dir):
@@ -29,69 +28,93 @@ def plot_grid_search(wf_search_df, thresh_grid, rebal_grid, output_dir):
     """
     vmin = float(wf_search_df["wf_score"].min())
     vmax = float(wf_search_df["wf_score"].max())
-    norm = Normalize(vmin=vmin, vmax=vmax)
-    cmap = plt.cm.viridis
 
-    fig_hm, axes_hm = plt.subplots(2, 2, figsize=(10, 8), constrained_layout=True)
-    mappable = None
-    for ax, (dz, rebal) in zip(axes_hm.flat, product(thresh_grid, rebal_grid)):
+    subplot_titles = [
+        f"DEAD_ZONE={dz}, rebalance_every={rebal}"
+        for dz in thresh_grid
+        for rebal in rebal_grid
+    ]
+    fig_hm = make_subplots(
+        rows=len(thresh_grid),
+        cols=len(rebal_grid),
+        subplot_titles=tuple(subplot_titles),
+        vertical_spacing=0.12,
+        horizontal_spacing=0.08,
+    )
+
+    plot_idx = 0
+    for dz in thresh_grid:
+        for rebal in rebal_grid:
+            plot_idx += 1
+            row = 1 + (plot_idx - 1) // len(rebal_grid)
+            col = 1 + (plot_idx - 1) % len(rebal_grid)
+
         sub = wf_search_df[
             (wf_search_df["DEAD_ZONE"] == dz) & (wf_search_df["rebalance_every"] == rebal)
         ]
         pivot = sub.pivot(index="MA_WINDOW", columns="VOL_WINDOW", values="wf_score")
         pivot = pivot.reindex(index=sorted(pivot.index), columns=sorted(pivot.columns))
-        im = ax.imshow(pivot.values, aspect="auto", cmap=cmap, norm=norm)
-        mappable = im
-        ax.set_xticks(np.arange(pivot.shape[1]))
-        ax.set_xticklabels(pivot.columns)
-        ax.set_yticks(np.arange(pivot.shape[0]))
-        ax.set_yticklabels(pivot.index)
-        ax.set_xlabel("VOL_WINDOW")
-        ax.set_ylabel("MA_WINDOW")
-        ax.set_title(f"DEAD_ZONE={dz}, rebalance_every={rebal}")
-        mid = vmin + 0.55 * (vmax - vmin)
-        for i in range(pivot.shape[0]):
-            for j in range(pivot.shape[1]):
-                val = pivot.values[i, j]
-                if np.isfinite(val):
-                    ax.text(
-                        j,
-                        i,
-                        f"{val:.3f}",
-                        ha="center",
-                        va="center",
-                        color="white" if val < mid else "black",
-                        fontsize=9,
-                    )
-    if mappable is not None:
-        fig_hm.colorbar(
-            mappable,
-            ax=axes_hm,
-            shrink=0.85,
-            label="wf_score (mean val Sharpe − penalty × std)",
+
+        fig_hm.add_trace(
+            go.Heatmap(
+                z=pivot.values,
+                x=[str(v) for v in pivot.columns],
+                y=[str(v) for v in pivot.index],
+                colorscale="Viridis",
+                zmin=vmin,
+                zmax=vmax,
+                text=np.round(pivot.values, 3),
+                texttemplate="%{text:.3f}",
+                textfont={"size": 11},
+                hovertemplate="MA_WINDOW: %{y}<br>VOL_WINDOW: %{x}<br>wf_score: %{z:.3f}<extra></extra>",
+                colorbar={
+                    "title": {"text": "wf_score"},
+                    "len": 0.8,
+                } if plot_idx == 1 else None,
+                showscale=(plot_idx == 1),
+            ),
+            row=row,
+            col=col,
         )
-    fig_hm.suptitle("Walk-forward grid search: validation wf_score", y=1.02, fontsize=12)
-    save_fig(fig_hm, "wf_grid_search_heatmaps", output_dir)
+        fig_hm.update_xaxes(title_text="VOL_WINDOW", row=row, col=col)
+        fig_hm.update_yaxes(title_text="MA_WINDOW", row=row, col=col)
+
+    fig_hm.update_layout(
+        title="Walk-Forward Grid Search: Validation wf_score",
+        width=1100,
+        height=850,
+    )
+    save_plotly_fig(fig_hm, "wf_grid_search_heatmaps", output_dir)
 
     wf_sorted = wf_search_df.sort_values("wf_score", ascending=True)
     labels = [
         f"{int(r['MA_WINDOW'])}|{int(r['VOL_WINDOW'])}|{r['DEAD_ZONE']}|{int(r['rebalance_every'])}"
         for _, r in wf_sorted.iterrows()
     ]
-    h = max(6.0, 0.22 * len(wf_sorted))
-    fig_bar, ax_bar = plt.subplots(figsize=(8, h), constrained_layout=True)
-    ax_bar.barh(np.arange(len(wf_sorted)), wf_sorted["wf_score"], color="steelblue")
-    ax_bar.set_yticks(np.arange(len(wf_sorted)))
-    ax_bar.set_yticklabels(labels, fontsize=7)
-    ax_bar.set_xlabel("wf_score")
-    ax_bar.set_title("All grid points (MA | VOL | dead-zone | rebalance days)")
-    ax_bar.axvline(
-        float(wf_sorted["wf_score"].iloc[-1]),
-        color="crimson",
-        linestyle="--",
-        linewidth=1,
-        alpha=0.85,
-        label="best",
+    fig_bar = go.Figure()
+    fig_bar.add_trace(
+        go.Bar(
+            x=wf_sorted["wf_score"],
+            y=labels,
+            orientation="h",
+            marker={"color": config.COLORS["net"]},
+            hovertemplate="%{y}<br>wf_score: %{x:.3f}<extra></extra>",
+            name="wf_score",
+        )
     )
-    ax_bar.legend(loc="lower right", fontsize=8)
-    save_fig(fig_bar, "wf_grid_search_ranking", output_dir)
+    fig_bar.add_vline(
+        x=float(wf_sorted["wf_score"].iloc[-1]),
+        line_dash="dash",
+        line_color=config.COLORS["cost"],
+        line_width=1.5,
+        annotation_text="Best",
+        annotation_position="top",
+    )
+    fig_bar.update_layout(
+        title="All Grid Points (MA | VOL | dead-zone | rebalance days)",
+        xaxis_title="wf_score",
+        yaxis_title="Parameter set",
+        width=1000,
+        height=max(500, 28 * len(wf_sorted)),
+    )
+    save_plotly_fig(fig_bar, "wf_grid_search_ranking", output_dir)

@@ -13,12 +13,12 @@ Usage:
     python -m src.run_pipeline --skip-download
 
 Outputs (written to output/ by default):
-    daily_excess_returns.pdf/.png
-    trend_signals_vs_price.pdf/.png
-    net_vs_gross_cost_turnover.pdf/.png
-    wf_grid_search_heatmaps.pdf/.png
-    wf_grid_search_ranking.pdf/.png
-    oos_performance.pdf/.png
+    daily_excess_returns.html/.pdf/.png
+    trend_signals_vs_price.html/.pdf/.png
+    net_vs_gross_cost_turnover.html/.pdf/.png
+    wf_grid_search_heatmaps.html/.pdf/.png
+    wf_grid_search_ranking.html/.pdf/.png
+    oos_performance.html/.pdf/.png
 """
 
 import argparse
@@ -31,7 +31,6 @@ _ROOT = _HERE.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 
 # ── Project modules ───────────────────────────────────────────────────────────
@@ -65,7 +64,6 @@ def main(skip_download: bool = False):
     """
     # ── Cell 1: load environment variables ───────────────────────────────────
     load_dotenv()
-    plt.rcParams.update(config.MPL_RC_PARAMS)
 
     # ── Cell 4: download OHLCV from Binance ──────────────────────────────────
     if not skip_download:
@@ -119,7 +117,6 @@ def main(skip_download: bool = False):
     excess_returns_mod.plot_excess_returns(
         excess_returns_df=excess_returns_df,
         output_dir=config.OUTPUT_DIR,
-        mpl_rc_params=config.MPL_RC_PARAMS,
     )
     display_df(excess_returns_df.describe().T[["mean", "std", "min", "max"]])
 

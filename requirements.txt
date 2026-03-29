@@ -1,0 +1,9 @@
+# Dependencies for `src/` — pip install -r requirements.txt
+ccxt
+fredapi
+kaleido
+numpy
+pandas
+plotly
+pyarrow
+python-dotenv

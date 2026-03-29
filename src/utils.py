@@ -4,11 +4,13 @@ utils.py — Shared utilities used across the src package.
 Functions:
   display_df(df)                           — show DataFrame in notebook or script mode
   section_header(step, title)              — print a consistent STEP N banner
-  save_fig(fig, name, output_dir, dpi=150) — save figure as PNG + PDF then show
-  format_date_axis(ax, fmt="%Y")           — apply YearLocator + DateFormatter to x-axis
+  apply_template(fig)                      — apply the shared Plotly template
+  save_plotly_fig(fig, name, output_dir)   — save figure as HTML + PNG + PDF
 """
 
 from pathlib import Path
+
+from src import config
 
 
 def display_df(df):
@@ -25,18 +27,25 @@ def section_header(step: int, title: str):
     print(f"\n{'=' * 60}\nSTEP {step}: {title}\n{'=' * 60}")
 
 
-def save_fig(fig, name: str, output_dir, dpi: int = 150):
-    """Save *fig* as both PNG (at *dpi*) and PDF into *output_dir*, then plt.show()."""
-    import matplotlib.pyplot as plt
+def apply_template(fig):
+    """Apply the shared Plotly theme to *fig* and return it."""
+    fig.update_layout(template=config.PLOTLY_TEMPLATE)
+    return fig
+
+
+def save_plotly_fig(fig, name: str, output_dir, formats=None):
+    """Save *fig* to all configured export formats in *output_dir*."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out / f"{name}.png", bbox_inches="tight", dpi=dpi)
-    fig.savefig(out / f"{name}.pdf", bbox_inches="tight")
-    plt.show()
+    formats = formats or config.EXPORT_FORMATS
 
+    apply_template(fig)
 
-def format_date_axis(ax, fmt: str = "%Y"):
-    """Apply YearLocator + DateFormatter to *ax* x-axis."""
-    import matplotlib.dates as mdates
-    ax.xaxis.set_major_locator(mdates.YearLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter(fmt))
+    for fmt in formats:
+        target = out / f"{name}.{fmt}"
+        if fmt == "html":
+            fig.write_html(target, include_plotlyjs="cdn", full_html=True)
+        elif fmt in {"png", "pdf"}:
+            fig.write_image(target, scale=2)
+        else:
+            raise ValueError(f"Unsupported plot export format: {fmt}")
