@@ -13,10 +13,7 @@ Function:
 import numpy as np
 import pandas as pd
 
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
+from .utils import display_df
 
 
 def compute_splits(
@@ -117,7 +114,7 @@ def compute_splits(
         f"VAL_BARS={val_bars}, STEP_BARS={step_bars}{rolling_note}"
     )
     print()
-    display(wf_folds)
+    display_df(wf_folds)
     print()
     assert dev_index.max() < holdout_index.min(), "dev and holdout ranges should not overlap"
     print("Sanity check: dev_index.max() < holdout_index.min() — OK")

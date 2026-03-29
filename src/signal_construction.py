@@ -11,6 +11,8 @@ Function:
 import numpy as np
 import pandas as pd
 
+from .helpers import _field_wide
+
 
 def construct_signals(asset_panel, symbols, ma_window, vol_window, dead_zone, signal_clip):
     """Build trend signal panel from close prices.
@@ -60,16 +62,11 @@ def construct_signals(asset_panel, symbols, ma_window, vol_window, dead_zone, si
         z_list.append(z.rename(s))
         trend_position_list.append(trend_position.rename(s))
 
-    mi = pd.MultiIndex.from_product
-
-    def _field_wide(field: str, parts: list) -> pd.DataFrame:
-        return pd.concat(parts, axis=1, keys=mi([[field], symbols], names=["field", "asset"]))
-
-    ma_50_wide          = _field_wide("ma_50",          ma50_list)
-    trend_raw_wide      = _field_wide("trend_raw",      trend_raw_list)
-    vol_20_wide         = _field_wide("vol_20",         vol_20_list)
-    z_wide              = _field_wide("z",              z_list)
-    trend_position_wide = _field_wide("trend_position", trend_position_list)
+    ma_50_wide          = _field_wide("ma_50",          ma50_list,             symbols)
+    trend_raw_wide      = _field_wide("trend_raw",      trend_raw_list,        symbols)
+    vol_20_wide         = _field_wide("vol_20",         vol_20_list,           symbols)
+    z_wide              = _field_wide("z",              z_list,                symbols)
+    trend_position_wide = _field_wide("trend_position", trend_position_list,   symbols)
 
     signal_panel = pd.concat(
         [ma_50_wide, trend_raw_wide, vol_20_wide, z_wide, trend_position_wide],

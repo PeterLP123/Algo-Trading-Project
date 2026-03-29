@@ -15,10 +15,7 @@ Functions (all extracted verbatim from Cell 25):
 import numpy as np
 import pandas as pd
 
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
+from .utils import display_df
 
 
 def max_dd(equity: pd.Series) -> float:
@@ -149,7 +146,7 @@ def compute_performance(
 
     perf_df = pd.DataFrame([perf_full, perf_is, perf_oos])
 
-    display(perf_df.T)
+    display_df(perf_df.T)
     print(f"Mean holding horizon (days, per-asset directional position): {horizon_days:.2f}")
 
     return perf_df

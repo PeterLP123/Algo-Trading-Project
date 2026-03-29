@@ -17,17 +17,13 @@ from itertools import product
 import numpy as np
 import pandas as pd
 
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
-
 from src.helpers import (
     build_signal_and_theta,
     compute_half_spread_frac,
     metrics_on_window,
     run_net_backtest,
 )
+from src.utils import display_df
 
 
 def run_grid_search(
@@ -138,7 +134,7 @@ def run_grid_search(
         .sort_values("wf_score", ascending=False)
         .reset_index(drop=True)
     )
-    display(wf_search_df.head(15))
+    display_df(wf_search_df.head(15))
 
     best        = wf_search_df.iloc[0]
     WF_BEST_MA    = int(best["MA_WINDOW"])

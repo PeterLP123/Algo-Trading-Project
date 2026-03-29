@@ -22,7 +22,6 @@ Outputs (written to output/ by default):
 """
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -34,11 +33,6 @@ if str(_ROOT) not in sys.path:
 
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
-
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
 
 # ── Project modules ───────────────────────────────────────────────────────────
 import src.config as config
@@ -59,6 +53,7 @@ from src import (
     signal_visualization,
     walk_forward_split,
 )
+from src.utils import display_df, section_header
 
 
 def main(skip_download: bool = False):
@@ -74,9 +69,7 @@ def main(skip_download: bool = False):
 
     # ── Cell 4: download OHLCV from Binance ──────────────────────────────────
     if not skip_download:
-        print("=" * 60)
-        print("STEP 1: Downloading OHLCV data from Binance")
-        print("=" * 60)
+        section_header(1, "Downloading OHLCV data from Binance")
         data_download.download_ohlcv(
             symbols=config.SYMBOLS,
             timeframe=config.TIMEFRAME,
@@ -89,9 +82,7 @@ def main(skip_download: bool = False):
 
     # ── Cell 6: fetch Fed Funds Rate from FRED ───────────────────────────────
     if not skip_download:
-        print("\n" + "=" * 60)
-        print("STEP 2: Downloading Fed Funds Rate (FRED)")
-        print("=" * 60)
+        section_header(2, "Downloading Fed Funds Rate (FRED)")
         dff = data_fred.download_fred_rate(
             since=config.SINCE,
             until=config.UNTIL,
@@ -108,9 +99,7 @@ def main(skip_download: bool = False):
     print(dff.tail())
 
     # ── Cell 8: data quality checks and cleaning ─────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 3: Data quality checks and cleaning")
-    print("=" * 60)
+    section_header(3, "Data quality checks and cleaning")
     cleaned_frames, quality_report = data_cleaning.process_all_symbols(
         symbols=config.SYMBOLS,
         timeframe=config.TIMEFRAME,
@@ -118,12 +107,10 @@ def main(skip_download: bool = False):
         value_columns=config.VALUE_COLUMNS,
         pandas_freq=config.PANDAS_FREQ,
     )
-    display(quality_report)
+    display_df(quality_report)
 
     # ── Cell 11: excess returns ───────────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 4: Computing excess returns")
-    print("=" * 60)
+    section_header(4, "Computing excess returns")
     cleaned_frames, excess_returns_df, rf_daily = excess_returns_mod.compute_excess_returns(
         cleaned_frames=cleaned_frames,
         dff=dff,
@@ -134,22 +121,18 @@ def main(skip_download: bool = False):
         output_dir=config.OUTPUT_DIR,
         mpl_rc_params=config.MPL_RC_PARAMS,
     )
-    display(excess_returns_df.describe().T[["mean", "std", "min", "max"]])
+    display_df(excess_returns_df.describe().T[["mean", "std", "min", "max"]])
 
     # ── Cell 13: common asset panel ──────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 5: Building asset panel")
-    print("=" * 60)
+    section_header(5, "Building asset panel")
     asset_panel = asset_panel_mod.build_asset_panel(
         cleaned_frames=cleaned_frames,
         symbols=config.SYMBOLS,
     )
-    display(asset_panel.head())
+    display_df(asset_panel.head())
 
     # ── Cell 15: walk-forward validation split ───────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 6: Walk-forward validation split")
-    print("=" * 60)
+    section_header(6, "Walk-forward validation split")
     splits = walk_forward_split.compute_splits(
         asset_panel=asset_panel,
         holdout_frac=config.HOLDOUT_FRAC,
@@ -164,9 +147,7 @@ def main(skip_download: bool = False):
     wf_folds      = splits["wf_folds"]
 
     # ── Cell 18: trend signal construction ───────────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 7: Trend signal construction")
-    print("=" * 60)
+    section_header(7, "Trend signal construction")
     signal_panel = signal_construction.construct_signals(
         asset_panel=asset_panel,
         symbols=config.SYMBOLS,
@@ -175,10 +156,10 @@ def main(skip_download: bool = False):
         dead_zone=config.DEAD_ZONE,
         signal_clip=config.SIGNAL_CLIP,
     )
-    display(signal_panel.head())
+    display_df(signal_panel.head())
 
     # ── Cell 19: signal visualization ────────────────────────────────────────
-    print("\nPlotting trend signals vs price...")
+    print("  → Plotting trend signals vs price...")
     signal_visualization.plot_signals(
         close_px=asset_panel["close"],
         signal_panel=signal_panel,
@@ -188,9 +169,7 @@ def main(skip_download: bool = False):
     )
 
     # ── Cell 21: position sizing ─────────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 8: Position sizing (exposure mapping)")
-    print("=" * 60)
+    section_header(8, "Position sizing (exposure mapping)")
     exposure_result = position_sizing.compute_exposures(
         signal_panel=signal_panel,
         symbols=config.SYMBOLS,
@@ -198,12 +177,10 @@ def main(skip_download: bool = False):
         gross_cap=config.GROSS_CAP,
     )
     exposure_panel = exposure_result["exposure_panel"]
-    display(exposure_panel.tail())
+    display_df(exposure_panel.tail())
 
     # ── Cell 23: backtest ────────────────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 9: Running backtest (gross + net P&L)")
-    print("=" * 60)
+    section_header(9, "Running backtest (gross + net P&L)")
     bt_result = backtest.run_baseline_backtest(
         asset_panel=asset_panel,
         exposure_panel=exposure_panel,
@@ -222,9 +199,7 @@ def main(skip_download: bool = False):
     net_pnl             = bt_result["net_pnl"]
 
     # ── Cell 25: performance metrics ─────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 10: Performance metrics (IS / OOS)")
-    print("=" * 60)
+    section_header(10, "Performance metrics (IS / OOS)")
     perf_df = performance_metrics.compute_performance(
         net_portfolio_value=net_portfolio_value,
         theta_exec=theta_exec,
@@ -236,9 +211,7 @@ def main(skip_download: bool = False):
     )
 
     # ── Cell 27: walk-forward grid search ────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 11: Walk-forward parameter grid search")
-    print("=" * 60)
+    section_header(11, "Walk-forward parameter grid search")
     wf_search_df, WF_BEST_MA, WF_BEST_VOL, WF_BEST_DZ, WF_BEST_REBAL = \
         grid_search.run_grid_search(
             asset_panel=asset_panel,
@@ -259,7 +232,7 @@ def main(skip_download: bool = False):
         )
 
     # ── Cell 28: grid search visualization ───────────────────────────────────
-    print("\nPlotting grid search results...")
+    print("  → Plotting grid search results...")
     grid_search_viz.plot_grid_search(
         wf_search_df=wf_search_df,
         thresh_grid=config.THRESH_GRID,
@@ -268,9 +241,7 @@ def main(skip_download: bool = False):
     )
 
     # ── Cell 30: final holdout evaluation ────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("STEP 12: Final holdout evaluation (frozen WF parameters)")
-    print("=" * 60)
+    section_header(12, "Final holdout evaluation (frozen WF parameters)")
     holdout_result = holdout_evaluation.evaluate_holdout(
         asset_panel=asset_panel,
         cleaned_frames=cleaned_frames,
@@ -288,7 +259,7 @@ def main(skip_download: bool = False):
     )
 
     # ── Cell 31: OOS performance plot ────────────────────────────────────────
-    print("\nPlotting OOS performance...")
+    print("  → Plotting OOS performance...")
     oos_plot.plot_oos_performance(
         net_pv_h=holdout_result["net_pv_h"],
         holdout_index=holdout_index,
@@ -297,9 +268,7 @@ def main(skip_download: bool = False):
         output_dir=config.OUTPUT_DIR,
     )
 
-    print("\n" + "=" * 60)
-    print("Pipeline complete. Output saved to:", config.OUTPUT_DIR.resolve())
-    print("=" * 60)
+    print(f"\n{'=' * 60}\nPipeline complete. Output saved to: {config.OUTPUT_DIR.resolve()}\n{'=' * 60}")
 
     return {
         "cleaned_frames":    cleaned_frames,

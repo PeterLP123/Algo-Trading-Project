@@ -1,8 +1,9 @@
 """
-helpers.py — Core helper functions extracted verbatim from Cell 2 of
-strategy_final_v2.ipynb (279 lines).
+helpers.py — Core helper functions extracted from Cell 2 of
+strategy_final_v2.ipynb.
 
 Functions:
+  _field_wide                  — shared MultiIndex DataFrame builder
   abdi_ranaldo_spread          — AR (2017) spread estimator from OHLC
   compute_half_spread_frac     — 0.5 × AR, reindexed and lagged
   make_rebalance_mask          — boolean Series marking rebalance dates
@@ -10,13 +11,28 @@ Functions:
   build_signal_and_theta       — trend signal + dollar exposure builder
   _print_execution_diagnostics — debug helper for run_net_backtest
   run_net_backtest             — core P&L engine (gross + net)
-  _wf_max_drawdown             — max drawdown on equity series
-  _wf_sharpe_ratio             — annualised Sharpe ratio
+  _wf_max_drawdown             — alias for performance_metrics.max_dd
+  _wf_sharpe_ratio             — alias for performance_metrics.sharpe_ratio
   metrics_on_window            — Sharpe/return/DD/turnover on a date window
 """
 
 import numpy as np
 import pandas as pd
+
+# Canonical metric implementations live in performance_metrics.py; alias here
+# so internal callers (_wf_max_drawdown, _wf_sharpe_ratio) continue to work.
+from .performance_metrics import max_dd as _wf_max_drawdown, sharpe_ratio as _wf_sharpe_ratio
+
+
+# ── Shared MultiIndex helper ───────────────────────────────────────────────
+
+def _field_wide(field: str, parts: list, symbols: list) -> pd.DataFrame:
+    """Wrap a list of per-asset Series into a (field × asset) MultiIndex DataFrame."""
+    return pd.concat(
+        parts,
+        axis=1,
+        keys=pd.MultiIndex.from_product([[field], symbols], names=["field", "asset"]),
+    )
 
 
 # ── Helper functions (inlined from wf_trend_pipeline.py) ──────────────────
@@ -96,16 +112,13 @@ def build_signal_and_theta(
         vol_20_list.append(vol_20.rename(s))
         z_list.append(z.rename(s))
         trend_position_list.append(trend_position.rename(s))
-    mi = pd.MultiIndex.from_product
-    def _field_wide_bst(field, parts):
-        return pd.concat(parts, axis=1, keys=mi([[field], symbols], names=["field", "asset"]))
     signal_panel = pd.concat(
         [
-            _field_wide_bst("ma", ma_list),
-            _field_wide_bst("trend_raw", trend_raw_list),
-            _field_wide_bst("vol_20", vol_20_list),
-            _field_wide_bst("z", z_list),
-            _field_wide_bst("trend_position", trend_position_list),
+            _field_wide("ma",             ma_list,             symbols),
+            _field_wide("trend_raw",      trend_raw_list,      symbols),
+            _field_wide("vol_20",         vol_20_list,         symbols),
+            _field_wide("z",              z_list,              symbols),
+            _field_wide("trend_position", trend_position_list, symbols),
         ],
         axis=1,
     ).sort_index(axis=1)
@@ -268,22 +281,6 @@ def run_net_backtest(
         "r": r,
         "liquidated_at": liquidated_at,
     }
-
-
-def _wf_max_drawdown(equity):
-    eq = equity.dropna()
-    if eq.empty:
-        return np.nan
-    peak = eq.cummax()
-    dd = (eq - peak) / peak.replace(0.0, np.nan)
-    return float(dd.min())
-
-
-def _wf_sharpe_ratio(returns, trading_days=252):
-    r = returns.dropna()
-    if len(r) < 2 or r.std(ddof=1) == 0:
-        return np.nan
-    return float(np.sqrt(trading_days) * r.mean() / r.std(ddof=1))
 
 
 def metrics_on_window(net_portfolio_value, turnover, window_index, trading_days=252):

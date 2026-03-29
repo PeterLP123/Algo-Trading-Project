@@ -12,10 +12,8 @@ Function:
 import numpy as np
 import pandas as pd
 
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
+from .helpers import _field_wide
+from .utils import display_df
 
 
 def compute_exposures(signal_panel, symbols, dead_zone, gross_cap):
@@ -61,19 +59,12 @@ def compute_exposures(signal_panel, symbols, dead_zone, gross_cap):
 
     theta = gross_cap * w_tilde
 
-    def _field_wide_df(field: str, df: pd.DataFrame) -> pd.DataFrame:
-        return pd.concat(
-            [df[s] for s in symbols],
-            axis=1,
-            keys=pd.MultiIndex.from_product([[field], symbols], names=["field", "asset"]),
-        )
-
     exposure_panel = pd.concat(
         [
-            _field_wide_df("w_raw",   w_raw),
-            _field_wide_df("w_risk",  w_risk),
-            _field_wide_df("w_tilde", w_tilde),
-            _field_wide_df("theta",   theta),
+            _field_wide("w_raw",   [w_raw[s]   for s in symbols], symbols),
+            _field_wide("w_risk",  [w_risk[s]  for s in symbols], symbols),
+            _field_wide("w_tilde", [w_tilde[s] for s in symbols], symbols),
+            _field_wide("theta",   [theta[s]   for s in symbols], symbols),
         ],
         axis=1,
     ).sort_index(axis=1)
@@ -90,27 +81,28 @@ def compute_exposures(signal_panel, symbols, dead_zone, gross_cap):
         f"max={gross_abs[active_rows].max():,.2f}, matches GROSS_CAP={gross_cap:,.0f})"
     )
 
-    # Quick sanity check: sizing chain for a few recent dates
-    _check_dates = list(signal_panel.index[-3:])
-    _sanity = []
-    for _dt in _check_dates:
-        for _s in symbols:
-            _sanity.append(
-                {
-                    "timestamp":      _dt,
-                    "asset":          _s,
-                    "trend_raw":      tr.loc[_dt, _s],
-                    "vol_20":         vol.loc[_dt, _s],
-                    "z":              z.loc[_dt, _s],
-                    "trend_position": pos.loc[_dt, _s],
-                    "w_raw":          w_raw.loc[_dt, _s],
-                    "w_risk":         w_risk.loc[_dt, _s],
-                    "w_norm":         w_tilde.loc[_dt, _s],
-                    "theta":          theta.loc[_dt, _s],
-                }
-            )
+    # Sizing chain for last 3 dates
+    _last3 = signal_panel.index[-3:]
+    _sanity = (
+        pd.concat(
+            {
+                "trend_raw":      tr.loc[_last3],
+                "vol_20":         vol.loc[_last3],
+                "z":              z.loc[_last3],
+                "trend_position": pos.loc[_last3],
+                "w_raw":          w_raw.loc[_last3],
+                "w_risk":         w_risk.loc[_last3],
+                "w_norm":         w_tilde.loc[_last3],
+                "theta":          theta.loc[_last3],
+            },
+            axis=1,
+        )
+        .stack(level="asset", future_stack=True)
+        .reset_index()
+        .rename(columns={"level_0": "timestamp"})
+    )
     print("Sizing sanity check (last 3 dates × assets):")
-    display(pd.DataFrame(_sanity))
+    display_df(_sanity)
 
     return {
         "exposure_panel": exposure_panel,

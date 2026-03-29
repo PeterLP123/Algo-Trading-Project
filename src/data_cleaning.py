@@ -59,20 +59,28 @@ def clean_ohlcv(df: pd.DataFrame, value_columns=None) -> pd.DataFrame:
     return frame
 
 
-def quick_audit(df: pd.DataFrame, symbol: str, stage: str, pandas_freq: str = "1D") -> dict:
+def quick_audit(
+    df: pd.DataFrame,
+    symbol: str,
+    stage: str,
+    pandas_freq: str = "1D",
+    value_columns=None,
+) -> dict:
     """Return quality metrics for a DataFrame at a given processing stage.
 
     Args:
-        df          : DataFrame to audit (must have DatetimeIndex)
-        symbol      : asset name for labelling
-        stage       : "raw" or "cleaned"
-        pandas_freq : frequency string for missing-bar detection
+        df            : DataFrame to audit (must have DatetimeIndex)
+        symbol        : asset name for labelling
+        stage         : "raw" or "cleaned"
+        pandas_freq   : frequency string for missing-bar detection
+        value_columns : OHLCV column names (default: standard OHLCV list)
 
     Returns:
         dict with keys: symbol, stage, rows, duplicates, missing_bars,
                         null_rows, outliers
     """
-    value_columns = ["open", "high", "low", "close", "volume"]
+    if value_columns is None:
+        value_columns = ["open", "high", "low", "close", "volume"]
     idx = pd.DatetimeIndex(df.index)
     expected = pd.date_range(idx.min(), idx.max(), freq=pandas_freq, tz="UTC")
     return {
@@ -119,8 +127,8 @@ def process_all_symbols(symbols, timeframe, data_dir, value_columns=None, pandas
         clean.to_parquet(clean_path, engine="pyarrow")
 
         cleaned_frames[symbol] = clean
-        audit_rows.append(quick_audit(raw, symbol, "raw", pandas_freq=pandas_freq))
-        audit_rows.append(quick_audit(clean, symbol, "cleaned", pandas_freq=pandas_freq))
+        audit_rows.append(quick_audit(raw,   symbol, "raw",     pandas_freq=pandas_freq, value_columns=value_columns))
+        audit_rows.append(quick_audit(clean, symbol, "cleaned", pandas_freq=pandas_freq, value_columns=value_columns))
 
     quality_report = pd.DataFrame(audit_rows).sort_values(["symbol", "stage"]).reset_index(drop=True)
     return cleaned_frames, quality_report

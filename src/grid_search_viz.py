@@ -10,11 +10,12 @@ Function:
 """
 
 from itertools import product
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import Normalize
+
+from src.utils import save_fig
 
 
 def plot_grid_search(wf_search_df, thresh_grid, rebal_grid, output_dir):
@@ -26,9 +27,6 @@ def plot_grid_search(wf_search_df, thresh_grid, rebal_grid, output_dir):
         rebal_grid   : list of rebalance_every values (used as subplot axes)
         output_dir   : Path — where to save figures
     """
-    out_dir = Path(output_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
     vmin = float(wf_search_df["wf_score"].min())
     vmax = float(wf_search_df["wf_score"].max())
     norm = Normalize(vmin=vmin, vmax=vmax)
@@ -73,9 +71,7 @@ def plot_grid_search(wf_search_df, thresh_grid, rebal_grid, output_dir):
             label="wf_score (mean val Sharpe − penalty × std)",
         )
     fig_hm.suptitle("Walk-forward grid search: validation wf_score", y=1.02, fontsize=12)
-    fig_hm.savefig(out_dir / "wf_grid_search_heatmaps.png", bbox_inches="tight", dpi=150)
-    fig_hm.savefig(out_dir / "wf_grid_search_heatmaps.pdf", bbox_inches="tight")
-    plt.show()
+    save_fig(fig_hm, "wf_grid_search_heatmaps", output_dir)
 
     wf_sorted = wf_search_df.sort_values("wf_score", ascending=True)
     labels = [
@@ -98,6 +94,4 @@ def plot_grid_search(wf_search_df, thresh_grid, rebal_grid, output_dir):
         label="best",
     )
     ax_bar.legend(loc="lower right", fontsize=8)
-    fig_bar.savefig(out_dir / "wf_grid_search_ranking.png", bbox_inches="tight", dpi=150)
-    fig_bar.savefig(out_dir / "wf_grid_search_ranking.pdf", bbox_inches="tight")
-    plt.show()
+    save_fig(fig_bar, "wf_grid_search_ranking", output_dir)

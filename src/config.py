@@ -64,6 +64,19 @@ VOL_GRID          = [20, 30]
 THRESH_GRID       = [0.25, 0.5]
 REBAL_GRID        = [1, 3]
 
+# ── Plot colours and line styles (shared by all visualization modules) ────────
+C_LONG    = "#2ca02c"   # green  — long-position shading
+C_SHORT   = "#d62728"   # red    — short-position shading
+C_CLOSE   = "0.15"      # near-black — price / close line
+C_MA      = "tab:blue"  # moving average line
+C_GROSS   = "tab:blue"  # gross PnL line
+C_NET     = "tab:green" # net PnL / equity line
+C_COST    = "tab:red"   # cost fill / line
+C_BH      = "tab:blue"  # buy-and-hold benchmark line
+C_ZERO    = "0.4"       # zero / baseline reference lines
+GRID_LW   = 0.7         # grid linewidth
+GRID_ALPHA = 0.4        # grid alpha
+
 # ── Matplotlib style (Cell 11) ───────────────────────────────────────────────
 MPL_RC_PARAMS = {
     "figure.dpi":             500,

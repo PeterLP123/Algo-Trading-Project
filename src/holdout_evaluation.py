@@ -11,21 +11,11 @@ Function:
     Returns a dict with the holdout results and metrics DataFrame.
 """
 
-import numpy as np
 import pandas as pd
 
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
-
-from src.helpers import (
-    _wf_max_drawdown,
-    build_signal_and_theta,
-    compute_half_spread_frac,
-    run_net_backtest,
-)
-from src.performance_metrics import sharpe_ratio
+from src.helpers import build_signal_and_theta, compute_half_spread_frac, run_net_backtest
+from src.performance_metrics import calmar_ratio, max_dd, sharpe_ratio, sortino_ratio
+from src.utils import display_df
 
 
 def evaluate_holdout(
@@ -115,41 +105,20 @@ def evaluate_holdout(
     eq_oos = net_pv_h.reindex(holdout_index).dropna()
     r_oos  = eq_oos.pct_change().dropna()
 
-    def _sortino(rs: pd.Series, mar: float = 0.0) -> float:
-        downside = rs[rs < mar] - mar
-        if len(rs) < 2 or len(downside) == 0:
-            return float("nan")
-        ds = downside.std(ddof=0)
-        if ds == 0 or np.isnan(ds):
-            return float("nan")
-        return float(np.sqrt(trading_days) * (rs.mean() - mar) / ds)
-
-    def _calmar(eq: pd.Series) -> float:
-        r = eq.pct_change().dropna()
-        if len(r) < 2:
-            return float("nan")
-        if eq.iloc[-1] <= 0 or eq.iloc[0] <= 0:
-            return float("nan")
-        ann = float((eq.iloc[-1] / eq.iloc[0]) ** (trading_days / len(r)) - 1.0)
-        mdd = _wf_max_drawdown(eq)
-        if mdd is None or mdd == 0 or np.isnan(mdd):
-            return float("nan")
-        return float(ann / abs(mdd))
-
     holdout_metrics = {
-        "n_days":          len(eq_oos),
-        "sharpe":          sharpe_ratio(r_oos, trading_days),
-        "sortino":         _sortino(r_oos),
-        "calmar":          _calmar(eq_oos),
-        "max_drawdown":    _wf_max_drawdown(eq_oos),
-        "mean_turnover":   float(turn_h.reindex(holdout_index).mean()),
-        "total_net_pnl":   float(net_pnl_h.reindex(holdout_index).sum()),
+        "n_days":           len(eq_oos),
+        "sharpe":           sharpe_ratio(r_oos, trading_days),
+        "sortino":          sortino_ratio(r_oos, trading_days=trading_days),
+        "calmar":           calmar_ratio(r_oos, eq_oos, trading_days),
+        "max_drawdown":     max_dd(eq_oos),
+        "mean_turnover":    float(turn_h.reindex(holdout_index).mean()),
+        "total_net_pnl":    float(net_pnl_h.reindex(holdout_index).sum()),
         "pct_return_on_V0": float(net_pnl_h.reindex(holdout_index).sum() / v0_wf),
         "final_net_equity": float(eq_oos.iloc[-1]) if len(eq_oos) else float("nan"),
     }
 
     holdout_metrics_df = pd.DataFrame([holdout_metrics], index=["Holdout (final OOS)"])
-    display(holdout_metrics_df.T)
+    display_df(holdout_metrics_df.T)
     print("Holdout period:", holdout_index.min(), "→", holdout_index.max())
 
     return {

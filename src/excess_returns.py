@@ -12,12 +12,12 @@ Functions:
     Saves as daily_excess_returns.pdf and .png.
 """
 
-from pathlib import Path
-
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.ticker import PercentFormatter
+
+from .utils import save_fig
 
 
 def compute_excess_returns(cleaned_frames, dff, symbols):
@@ -93,9 +93,4 @@ def plot_excess_returns(excess_returns_df, output_dir, mpl_rc_params=None):
 
     ax.legend(title="Asset", loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False)
 
-    out_dir = Path(output_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_dir / "daily_excess_returns.pdf", bbox_inches="tight")
-    fig.savefig(out_dir / "daily_excess_returns.png", bbox_inches="tight")
-
-    plt.show()
+    save_fig(fig, "daily_excess_returns", output_dir)
