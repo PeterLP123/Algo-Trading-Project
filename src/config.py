@@ -66,6 +66,15 @@ VOL_GRID          = [20, 30]
 THRESH_GRID       = [0.25, 0.5]
 REBAL_GRID        = [1, 3]
 
+# ── Cointegration / pairs-trading strategy (Strategy 2) ─────────────────────
+COINT_PVALUE_THRESHOLD = 0.05
+ZSCORE_ENTRY           = 2.0
+ZSCORE_EXIT            = 0.5
+ZSCORE_STOP            = 4.0
+ROLLING_HEDGE_WINDOW   = 60
+COINT_TEST_WINDOW      = 252
+OOS_WINDOW             = 63
+
 # ── Plot theme (shared by all visualization modules) ─────────────────────────
 COLORS = {
     "long": "#00C853",
@@ -78,6 +87,10 @@ COLORS = {
     "ma": "#00ACC1",
     "zero": "#9E9E9E",
     "turnover": "#455A64",
+    "spread": "#7C4DFF",
+    "pairs_net": "#00BFA5",
+    "pairs_gross": "#FF6F00",
+    "threshold": "#BDBDBD",
 }
 
 COLOR_SEQUENCE = [

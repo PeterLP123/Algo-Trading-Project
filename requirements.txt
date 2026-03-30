@@ -7,3 +7,4 @@ pandas
 plotly
 pyarrow
 python-dotenv
+statsmodels
