@@ -45,7 +45,7 @@ GROSS_CAP = 100_000.0  # fixed gross notional budget (sum |theta_i| = GROSS_CAP 
 
 # ── Backtest (Cell 23) ───────────────────────────────────────────────────────
 BACKTEST_USE_EXCESS = False   # True → use excess_return instead of simple returns
-V0 = GROSS_CAP               # initial capital (aligned with gross notional budget)
+V0 = 10_000.0                 # initial capital ($10,000 USDT as per brief; 10x leverage)
 
 # ── Walk-forward split (Cell 15) ─────────────────────────────────────────────
 HOLDOUT_FRAC        = 0.225   # ~22.5% final test period; reserved and untouched
