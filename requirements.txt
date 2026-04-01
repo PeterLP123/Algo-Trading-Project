@@ -3,6 +3,7 @@ ccxt
 fredapi
 kaleido
 numpy
+optuna
 pandas
 plotly
 pyarrow

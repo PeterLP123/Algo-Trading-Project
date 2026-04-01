@@ -142,7 +142,7 @@ def compute_performance(
     }
 
     perf_is  = perf_block(dev_index,     "IS (development)")
-    perf_oos = perf_block(holdout_index, "OOS (holdout)")
+    perf_oos = perf_block(holdout_index, "OOS (final test)")
 
     perf_df = pd.DataFrame([perf_full, perf_is, perf_oos])
 

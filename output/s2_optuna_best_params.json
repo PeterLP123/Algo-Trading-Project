@@ -1,0 +1,35 @@
+{
+  "study_name": "strategy2_walk_forward",
+  "n_trials": 150,
+  "objective_value": 1.0801127279098386,
+  "params": {
+    "rsi_period": 17,
+    "rsi_entry": 60,
+    "rsi_gap": 13,
+    "max_hold": 15,
+    "crash_threshold": -0.3
+  },
+  "derived_params": {
+    "rsi_period": 17,
+    "rsi_entry": 60,
+    "rsi_exit": 47,
+    "rsi_gap": 13,
+    "max_hold": 15,
+    "crash_threshold": -0.3
+  },
+  "user_attrs": {
+    "active_fold_count": 4,
+    "inactivity_penalty": 0.5,
+    "invalid_reason": "",
+    "mean_active_days_per_fold": 3.7333333333333334,
+    "mean_val_max_dd": -0.013430961801686838,
+    "mean_val_return": 0.02756942627138875,
+    "mean_val_sharpe": 1.6492549684332336,
+    "objective_score": 1.0801127279098386,
+    "penalty_reasons": "traded_fold_share < 0.35",
+    "rsi_exit": 47,
+    "std_val_sharpe": 0.46094827015596707,
+    "total_dev_trades": 12,
+    "traded_fold_share": 0.26666666666666666
+  }
+}

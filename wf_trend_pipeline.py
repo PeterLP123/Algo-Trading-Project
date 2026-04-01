@@ -323,6 +323,9 @@ def metrics_on_window(
     turnover: pd.Series,
     window_index: pd.DatetimeIndex,
     trading_days: int = 252,
+    gross_pnl: pd.Series | None = None,
+    cost_t: pd.Series | None = None,
+    theta_exec: pd.DataFrame | None = None,
 ) -> dict[str, float]:
     eq = net_portfolio_value.reindex(window_index).dropna()
     turn = turnover.reindex(window_index).dropna()
@@ -332,11 +335,27 @@ def metrics_on_window(
             "total_return": np.nan,
             "max_dd": np.nan,
             "mean_turnover": np.nan,
+            "cost_to_gross_ratio": np.nan,
+            "active_days_pct": np.nan,
         }
     r = eq.pct_change().dropna()
+    ratio = np.nan
+    if gross_pnl is not None and cost_t is not None:
+        gross_slice = gross_pnl.reindex(window_index).dropna()
+        cost_slice = cost_t.reindex(window_index).dropna()
+        abs_gross = float(gross_slice.abs().sum())
+        total_cost = float(cost_slice.sum())
+        ratio = float(total_cost / abs_gross) if abs_gross > 0 else np.nan
+    active_days_pct = np.nan
+    if theta_exec is not None:
+        gross_exposure = theta_exec.reindex(window_index).abs().sum(axis=1)
+        if len(gross_exposure):
+            active_days_pct = float((gross_exposure > 0).mean())
     return {
         "sharpe": sharpe_ratio(r, trading_days),
         "total_return": float(eq.iloc[-1] / eq.iloc[0] - 1.0),
         "max_dd": max_drawdown(eq),
         "mean_turnover": float(turn.mean()) if len(turn) else np.nan,
+        "cost_to_gross_ratio": ratio,
+        "active_days_pct": active_days_pct,
     }

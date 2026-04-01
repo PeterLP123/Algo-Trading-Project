@@ -19,6 +19,7 @@ from .utils import display_df
 def compute_splits(
     asset_panel,
     holdout_frac=0.225,
+    final_test_bars=None,
     initial_train_bars=756,
     val_bars=126,
     step_bars=126,
@@ -30,6 +31,7 @@ def compute_splits(
     Args:
         asset_panel        : pd.DataFrame with DatetimeIndex (rows = trading days)
         holdout_frac       : fraction of dates reserved as final holdout
+        final_test_bars    : optional fixed-size final test window; overrides holdout_frac
         initial_train_bars : minimum training bars before first validation fold
         val_bars           : number of bars per validation window
         step_bars          : stride between consecutive fold starts
@@ -48,7 +50,14 @@ def compute_splits(
     idx = asset_panel.index.sort_values()
     n = len(idx)
 
-    holdout_n = max(1, int(round(holdout_frac * n)))
+    if final_test_bars is not None:
+        holdout_n = int(final_test_bars)
+        if holdout_n <= 0 or holdout_n >= n:
+            raise ValueError(f"FINAL_TEST_BARS must be in [1, n-1], got {final_test_bars} for n={n}")
+        holdout_label = f"FINAL_TEST_BARS={holdout_n}"
+    else:
+        holdout_n = max(1, int(round(holdout_frac * n)))
+        holdout_label = f"HOLDOUT_FRAC={holdout_frac}"
     holdout_index = idx[-holdout_n:]
     dev_index = idx[:-holdout_n]
 
@@ -105,7 +114,7 @@ def compute_splits(
     )
     print(
         f"Holdout (final test):     {holdout_index.min().date()} → {holdout_index.max().date()} "
-        f"(n={len(holdout_index)}, HOLDOUT_FRAC={holdout_frac})"
+        f"(n={len(holdout_index)}, {holdout_label})"
     )
     print()
     rolling_note = f", TRAIN_BARS={train_bars}" if wf_mode == "rolling" else ""
@@ -124,5 +133,6 @@ def compute_splits(
         "n": n,
         "dev_index": dev_index,
         "holdout_index": holdout_index,
+        "final_test_bars": holdout_n,
         "wf_folds": wf_folds,
     }

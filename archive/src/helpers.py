@@ -225,7 +225,7 @@ def run_net_backtest(
             carried_t = zero_row
         else:
             prev_exec = theta_exec.iloc[i - 1]
-            prev_return = r.iloc[i]
+            prev_return = r.iloc[i - 1]
             carried_t = prev_exec * (1.0 + prev_return)
         carried.iloc[i] = carried_t.to_numpy(dtype=float)
         if liquidated:
@@ -283,15 +283,44 @@ def run_net_backtest(
     }
 
 
-def metrics_on_window(net_portfolio_value, turnover, window_index, trading_days=252):
+def metrics_on_window(
+    net_portfolio_value,
+    turnover,
+    window_index,
+    trading_days=252,
+    gross_pnl=None,
+    cost_t=None,
+    theta_exec=None,
+):
     eq = net_portfolio_value.reindex(window_index).dropna()
     turn = turnover.reindex(window_index).dropna()
     if len(eq) < 2:
-        return {"sharpe": np.nan, "total_return": np.nan, "max_dd": np.nan, "mean_turnover": np.nan}
+        return {
+            "sharpe": np.nan,
+            "total_return": np.nan,
+            "max_dd": np.nan,
+            "mean_turnover": np.nan,
+            "cost_to_gross_ratio": np.nan,
+            "active_days_pct": np.nan,
+        }
     r = eq.pct_change().dropna()
+    ratio = np.nan
+    if gross_pnl is not None and cost_t is not None:
+        gross_slice = gross_pnl.reindex(window_index).dropna()
+        cost_slice = cost_t.reindex(window_index).dropna()
+        abs_gross = float(gross_slice.abs().sum())
+        total_cost = float(cost_slice.sum())
+        ratio = float(total_cost / abs_gross) if abs_gross > 0 else np.nan
+    active_days_pct = np.nan
+    if theta_exec is not None:
+        gross_exposure = theta_exec.reindex(window_index).abs().sum(axis=1)
+        if len(gross_exposure):
+            active_days_pct = float((gross_exposure > 0).mean())
     return {
         "sharpe": _wf_sharpe_ratio(r, trading_days),
         "total_return": float(eq.iloc[-1] / eq.iloc[0] - 1.0),
         "max_dd": _wf_max_drawdown(eq),
         "mean_turnover": float(turn.mean()) if len(turn) else np.nan,
+        "cost_to_gross_ratio": ratio,
+        "active_days_pct": active_days_pct,
     }

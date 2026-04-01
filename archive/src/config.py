@@ -35,25 +35,26 @@ VALUE_COLUMNS = ["open", "high", "low", "close", "volume"]
 PANDAS_FREQ   = str(TIMEFRAME).upper()  # "1D"
 
 # ── Signal parameters (Cell 18, initial values; tuned in walk-forward) ───────
-MA_WINDOW  = 100
-VOL_WINDOW = 40
+MA_WINDOW  = 80
+VOL_WINDOW = 30
 DEAD_ZONE  = 0.25   # threshold on z for long/short/flat activation
 SIGNAL_CLIP = 5.0
 
 # ── Position sizing (Cell 21) ────────────────────────────────────────────────
-GROSS_CAP = 100_000.0  # fixed gross notional budget (sum |theta_i| = GROSS_CAP when active)
+GROSS_CAP = 50_000.0  # fixed gross notional budget (sum |theta_i| = GROSS_CAP when active)
 
 # ── Backtest (Cell 23) ───────────────────────────────────────────────────────
-BACKTEST_USE_EXCESS = False   # True → use excess_return instead of simple returns
-V0 = 10_000.0                 # initial capital ($10,000 USDT as per brief; 10x leverage)
+BACKTEST_USE_EXCESS = False
+V0 = 50_000.0
 
 # ── Walk-forward split (Cell 15) ─────────────────────────────────────────────
-HOLDOUT_FRAC        = 0.225   # ~22.5% final test period; reserved and untouched
-INITIAL_TRAIN_BARS  = 756     # ~3 years business days before first validation fold
-VAL_BARS            = 126     # ~6 months per validation block
-STEP_BARS           = 126     # non-overlapping validation windows
+HOLDOUT_FRAC        = 0.225   # legacy split retained for reference when FINAL_TEST_BARS is unset
+FINAL_TEST_BARS     = 126     # reserve the last 126 daily bars as the untouched final test
+INITIAL_TRAIN_BARS  = 600
+VAL_BARS            = 100
+STEP_BARS           = 100
 WF_MODE             = "expanding"  # "expanding" | "rolling"
-TRAIN_BARS          = 756     # rolling mode only: fixed training window length
+TRAIN_BARS          = 600     # rolling mode only: fixed training window length
 
 # ── Performance metrics (Cell 25) ────────────────────────────────────────────
 TRADING_DAYS = 252
@@ -61,10 +62,23 @@ TRADING_DAYS = 252
 # ── Walk-forward grid search (Cell 27) ───────────────────────────────────────
 STABILITY_PENALTY = 0.1
 SIGNAL_CLIP_WF    = 5.0
-MA_GRID           = [50, 75, 100]
-VOL_GRID          = [20, 30]
-THRESH_GRID       = [0.25, 0.5]
-REBAL_GRID        = [1, 3]
+MA_GRID           = [80, 120, 160]
+VOL_GRID          = [25, 40]
+THRESH_GRID       = [0.75, 1.0, 1.25]
+REBAL_GRID        = [5, 10]
+MAX_MEAN_VAL_TURNOVER = 4_000.0
+MIN_POSITIVE_FOLD_SHARE = 0.55
+WF_TIE_BAND = 0.05
+
+DEFAULT_WF_MA = 120
+DEFAULT_WF_VOL = 40
+DEFAULT_WF_DZ = 1.25
+DEFAULT_WF_REBAL = 10
+
+BASELINE_COMPARE_MA = 40
+BASELINE_COMPARE_VOL = 15
+BASELINE_COMPARE_DZ = 0.5
+BASELINE_COMPARE_REBAL = 2
 
 # ── Cointegration / pairs-trading strategy (Strategy 2) ─────────────────────
 COINT_PVALUE_THRESHOLD = 0.05

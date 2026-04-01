@@ -133,6 +133,7 @@ def main(skip_download: bool = False):
     splits = walk_forward_split.compute_splits(
         asset_panel=asset_panel,
         holdout_frac=config.HOLDOUT_FRAC,
+        final_test_bars=config.FINAL_TEST_BARS,
         initial_train_bars=config.INITIAL_TRAIN_BARS,
         val_bars=config.VAL_BARS,
         step_bars=config.STEP_BARS,
@@ -226,6 +227,13 @@ def main(skip_download: bool = False):
             v0_wf=config.V0,
             backtest_use_excess=config.BACKTEST_USE_EXCESS,
             trading_days=config.TRADING_DAYS,
+            max_mean_val_turnover=config.MAX_MEAN_VAL_TURNOVER,
+            min_positive_fold_share=config.MIN_POSITIVE_FOLD_SHARE,
+            wf_tie_band=config.WF_TIE_BAND,
+            default_ma=config.DEFAULT_WF_MA,
+            default_vol=config.DEFAULT_WF_VOL,
+            default_dz=config.DEFAULT_WF_DZ,
+            default_rebal=config.DEFAULT_WF_REBAL,
         )
 
     # ── Cell 28: grid search visualization ───────────────────────────────────
@@ -253,6 +261,10 @@ def main(skip_download: bool = False):
         v0_wf=config.V0,
         backtest_use_excess=config.BACKTEST_USE_EXCESS,
         trading_days=config.TRADING_DAYS,
+        baseline_ma=config.BASELINE_COMPARE_MA,
+        baseline_vol=config.BASELINE_COMPARE_VOL,
+        baseline_dz=config.BASELINE_COMPARE_DZ,
+        baseline_rebal=config.BASELINE_COMPARE_REBAL,
     )
 
     # ── Cell 31: OOS performance plot ────────────────────────────────────────
