@@ -19,8 +19,8 @@ def build_s2_features(cg_close: pd.DataFrame, cg_notional: pd.DataFrame) -> dict
     btc_dom = (notional["BTC"] / notional.sum(axis=1)).rename("btc_dominance")
     dom_change = btc_dom.diff().rename("dom_change")
     dom_zscore = (
-        (dom_change - dom_change.rolling(10).mean()) / dom_change.rolling(10).std(ddof=1)
-    ).rename("dom_zscore_10")
+        (btc_dom - btc_dom.rolling(20).mean()) / btc_dom.rolling(20).std(ddof=1)
+    ).rename("dom_level_zscore_20")
     alt_returns = close[alt_universe].pct_change().replace([np.inf, -np.inf], np.nan)
     btc_30d_ret = close["BTC"].pct_change(30).rename("btc_30d_ret")
     dom_roc = btc_dom.diff(3).rename("dom_roc_3")
@@ -30,14 +30,16 @@ def build_s2_features(cg_close: pd.DataFrame, cg_notional: pd.DataFrame) -> dict
     vol_20 = close[alt_universe].pct_change().rolling(20).std()
     inv_vol = (1.0 / vol_20).replace([np.inf, -np.inf], np.nan)
     raw_basket = underperf_score.multiply(inv_vol)
-    basket_weights = raw_basket.div(raw_basket.sum(axis=1), axis=0).fillna(0.0)
+    tilted_basket_weights = raw_basket.div(raw_basket.sum(axis=1), axis=0).fillna(0.0)
 
     eq_w = pd.DataFrame(
         1.0 / len(alt_universe),
-        index=basket_weights.index,
-        columns=basket_weights.columns,
+        index=tilted_basket_weights.index,
+        columns=tilted_basket_weights.columns,
     )
-    basket_weights = basket_weights.where(raw_basket.sum(axis=1).fillna(0.0) > 0.0, eq_w)
+    # A simple equal-weight alt basket has been materially more robust than the
+    # underperformance-tilted basket after BTC dominance spikes.
+    basket_weights = eq_w.copy()
 
     return {
         "index": close.index,
@@ -53,6 +55,7 @@ def build_s2_features(cg_close: pd.DataFrame, cg_notional: pd.DataFrame) -> dict
         "rel_ret_3d": rel_ret_3d,
         "underperf_score": underperf_score,
         "vol_20": vol_20,
+        "tilted_basket_weights": tilted_basket_weights,
         "basket_weights": basket_weights,
     }
 
@@ -82,7 +85,7 @@ def run_s2_strategy(
     params: dict,
     alt_universe: list[str],
     initial_capital: float,
-    cost_bps: float,
+    half_spread_frac: pd.DataFrame,
 ) -> dict:
     entry_pct = float(params["entry_pct"])
     lookback = int(params["lookback"])
@@ -161,14 +164,88 @@ def run_s2_strategy(
     exec_weights = exec_weights.where(available_mask, 0.0)
     weight_sums = exec_weights.sum(axis=1).replace(0.0, np.nan)
     exec_weights = exec_weights.div(weight_sums, axis=0).fillna(0.0)
+    half_spread_frac = (
+        ensure_utc_index(half_spread_frac)
+        .sort_index()
+        .reindex(index=index, columns=alt_universe)
+        .astype(float)
+        .fillna(0.0)
+    )
 
-    gross_daily = (exec_weights * alt_returns.fillna(0.0)).sum(axis=1).rename("s2_gross_daily")
-    turnover = exec_weights.diff().abs().sum(axis=1).fillna(0.0).rename("s2_turnover")
-    cost_daily = ((cost_bps / 10000.0) * turnover).rename("s2_cost_daily")
+    theta_rows: list[pd.Series] = []
+    carried_rows: list[pd.Series] = []
+    delta_rows: list[pd.Series] = []
+    gross_pnl_asset_rows: list[pd.Series] = []
+    gross_pnl_values: list[float] = []
+    cost_pnl_values: list[float] = []
+    turnover_values: list[float] = []
+    gross_equity_values: list[float] = []
+    net_equity_values: list[float] = []
+    equity_before_trade_values: list[float] = []
+    weight_turnover_values: list[float] = []
+
+    zero_row = pd.Series(0.0, index=alt_universe, dtype=float)
+    prev_theta = zero_row.copy()
+    prev_returns = zero_row.copy()
+    equity_prev = float(initial_capital)
+    gross_equity_prev = float(initial_capital)
+
+    alt_returns_filled = alt_returns.fillna(0.0)
+    weight_turnover = exec_weights.diff().abs().sum(axis=1).fillna(0.0).rename("s2_weight_turnover")
+
+    for dt in index:
+        returns_t = alt_returns_filled.loc[dt]
+        target_weights_t = exec_weights.loc[dt].fillna(0.0)
+        half_spread_t = half_spread_frac.loc[dt].fillna(0.0)
+
+        carried_theta_t = prev_theta * (1.0 + prev_returns)
+        equity_before_trade = float(equity_prev)
+        target_theta_t = target_weights_t * equity_before_trade
+        delta_theta_t = target_theta_t - carried_theta_t
+
+        turnover_t = float(delta_theta_t.abs().sum())
+        cost_pnl_t = float((delta_theta_t.abs() * half_spread_t).sum())
+        gross_pnl_asset_t = target_theta_t * returns_t
+        gross_pnl_t = float(gross_pnl_asset_t.sum())
+
+        gross_equity_t = max(gross_equity_prev + gross_pnl_t, 0.0)
+        net_equity_t = max(equity_before_trade + gross_pnl_t - cost_pnl_t, 0.0)
+
+        carried_rows.append(carried_theta_t)
+        theta_rows.append(target_theta_t)
+        delta_rows.append(delta_theta_t)
+        gross_pnl_asset_rows.append(gross_pnl_asset_t)
+        gross_pnl_values.append(gross_pnl_t)
+        cost_pnl_values.append(cost_pnl_t)
+        turnover_values.append(turnover_t)
+        gross_equity_values.append(gross_equity_t)
+        net_equity_values.append(net_equity_t)
+        equity_before_trade_values.append(equity_before_trade)
+        weight_turnover_values.append(float(weight_turnover.loc[dt]))
+
+        prev_theta = target_theta_t
+        prev_returns = returns_t
+        equity_prev = net_equity_t
+        gross_equity_prev = gross_equity_t
+
+    theta = pd.DataFrame(theta_rows, index=index, columns=alt_universe)
+    carried_theta = pd.DataFrame(carried_rows, index=index, columns=alt_universe)
+    delta_theta = pd.DataFrame(delta_rows, index=index, columns=alt_universe)
+    gross_pnl_asset = pd.DataFrame(gross_pnl_asset_rows, index=index, columns=alt_universe)
+
+    equity_before_trade = pd.Series(equity_before_trade_values, index=index, name="s2_equity_before_trade")
+    gross_pnl_daily = pd.Series(gross_pnl_values, index=index, name="s2_gross_pnl_daily")
+    cost_pnl_daily = pd.Series(cost_pnl_values, index=index, name="s2_cost_pnl_daily")
+    turnover = pd.Series(turnover_values, index=index, name="s2_turnover")
+    weight_turnover = pd.Series(weight_turnover_values, index=index, name="s2_weight_turnover")
+    gross_value = pd.Series(gross_equity_values, index=index, name="s2_gross_value")
+    net_value = pd.Series(net_equity_values, index=index, name="s2_net_value")
+
+    equity_base = equity_before_trade.replace(0.0, np.nan)
+    gross_daily = gross_pnl_daily.div(equity_base).fillna(0.0).rename("s2_gross_daily")
+    cost_daily = cost_pnl_daily.div(equity_base).fillna(0.0).rename("s2_cost_daily")
     net_daily = (gross_daily - cost_daily).rename("s2_net_daily")
-    gross_value = (initial_capital * (1.0 + gross_daily.fillna(0.0)).cumprod()).rename("s2_gross_value")
-    net_value = (initial_capital * (1.0 + net_daily.fillna(0.0)).cumprod()).rename("s2_net_value")
-    net_returns = net_value.pct_change().replace([np.inf, -np.inf], np.nan).rename("s2_r_net_daily")
+    net_returns = net_value.pct_change().replace([np.inf, -np.inf], np.nan).fillna(0.0).rename("s2_r_net_daily")
 
     pos_days = exec_weights.sum(axis=1)
     trade_log_rows = []
@@ -203,8 +280,16 @@ def run_s2_strategy(
         "trade_exits": trade_exits,
         "trade_exit_reasons": trade_exit_reasons,
         "crash_blocks": crash_blocks,
+        "theta": theta,
+        "carried_theta": carried_theta,
+        "delta_theta": delta_theta,
+        "gross_pnl_asset": gross_pnl_asset,
+        "equity_before_trade": equity_before_trade,
+        "gross_pnl_daily": gross_pnl_daily,
+        "cost_pnl_daily": cost_pnl_daily,
         "gross_daily": gross_daily,
         "turnover": turnover,
+        "weight_turnover": weight_turnover,
         "cost_daily": cost_daily,
         "net_daily": net_daily,
         "gross_value": gross_value,
