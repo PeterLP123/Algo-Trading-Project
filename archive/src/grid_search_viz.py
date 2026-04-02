@@ -43,7 +43,14 @@ def plot_grid_search(wf_search_df, thresh_grid, rebal_grid, output_dir):
             sub = wf_search_df[
                 (wf_search_df["DEAD_ZONE"] == dz) & (wf_search_df["rebalance_every"] == rebal)
             ]
-            pivot = sub.pivot(index="MA_WINDOW", columns="VOL_WINDOW", values="wf_score")
+            # `sub` can contain duplicate (MA_WINDOW, VOL_WINDOW) pairs across grid runs;
+            # `pivot` would crash, so aggregate duplicates for the heatmap.
+            pivot = sub.pivot_table(
+                index="MA_WINDOW",
+                columns="VOL_WINDOW",
+                values="wf_score",
+                aggfunc="mean",
+            )
             pivot = pivot.reindex(index=sorted(pivot.index), columns=sorted(pivot.columns))
 
             fig_hm.add_trace(

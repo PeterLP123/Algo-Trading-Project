@@ -1,35 +1,43 @@
 {
-  "study_name": "strategy2_walk_forward",
+  "study_name": "strategy2_zscore_roc_walk_forward",
   "n_trials": 150,
-  "objective_value": 1.0801127279098386,
+  "objective_value": 0.8683789436831271,
   "params": {
-    "rsi_period": 17,
-    "rsi_entry": 60,
-    "rsi_gap": 13,
-    "max_hold": 15,
-    "crash_threshold": -0.3
+    "entry_pct": 0.75,
+    "lookback": 252,
+    "exit_z": -0.25,
+    "max_hold": 5,
+    "roc_window": 5,
+    "roc_pct": 0.9,
+    "crash_threshold": null
   },
   "derived_params": {
-    "rsi_period": 17,
-    "rsi_entry": 60,
-    "rsi_exit": 47,
-    "rsi_gap": 13,
-    "max_hold": 15,
-    "crash_threshold": -0.3
+    "entry_pct": 0.75,
+    "lookback": 252,
+    "exit_z": -0.25,
+    "max_hold": 5,
+    "roc_window": 5,
+    "roc_pct": 0.9,
+    "crash_threshold": null
   },
   "user_attrs": {
-    "active_fold_count": 4,
-    "inactivity_penalty": 0.5,
+    "active_fold_count": 15,
+    "entry_pct": 0.75,
+    "exit_z": -0.25,
+    "inactivity_penalty": 0.0,
     "invalid_reason": "",
-    "mean_active_days_per_fold": 3.7333333333333334,
-    "mean_val_max_dd": -0.013430961801686838,
-    "mean_val_return": 0.02756942627138875,
-    "mean_val_sharpe": 1.6492549684332336,
-    "objective_score": 1.0801127279098386,
-    "penalty_reasons": "traded_fold_share < 0.35",
-    "rsi_exit": 47,
-    "std_val_sharpe": 0.46094827015596707,
-    "total_dev_trades": 12,
-    "traded_fold_share": 0.26666666666666666
+    "lookback": 252,
+    "max_hold": 5,
+    "mean_active_days_per_fold": 5.466666666666667,
+    "mean_val_max_dd": -0.02876734807827231,
+    "mean_val_return": 0.02405475260918893,
+    "mean_val_sharpe": 1.0178375038557326,
+    "objective_score": 0.8683789436831271,
+    "penalty_reasons": "",
+    "roc_pct": 0.9,
+    "roc_window": 5,
+    "std_val_sharpe": 0.9963904011507033,
+    "total_dev_trades": 89,
+    "traded_fold_share": 1.0
   }
 }

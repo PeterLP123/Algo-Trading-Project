@@ -318,6 +318,42 @@ def sharpe_ratio(returns: pd.Series, trading_days: int = 252) -> float:
     return float(np.sqrt(trading_days) * r.mean() / r.std(ddof=1))
 
 
+def sortino_ratio(returns: pd.Series, mar: float = 0.0, trading_days: int = 252) -> float:
+    r = returns.dropna()
+    downside = r[r < mar] - mar
+    if len(r) < 2 or len(downside) == 0:
+        return np.nan
+    downside_std = downside.std(ddof=0)
+    if downside_std == 0 or np.isnan(downside_std):
+        return np.nan
+    return float(np.sqrt(trading_days) * (r.mean() - mar) / downside_std)
+
+
+def calmar_ratio(returns: pd.Series, equity: pd.Series, trading_days: int = 252) -> float:
+    r = returns.dropna()
+    eq = equity.dropna()
+    if len(r) < 2 or len(eq) < 2:
+        return np.nan
+    if eq.iloc[0] <= 0 or eq.iloc[-1] <= 0:
+        return np.nan
+    ann_return = (eq.iloc[-1] / eq.iloc[0]) ** (trading_days / len(r)) - 1.0
+    mdd = max_drawdown(eq)
+    if not np.isfinite(mdd) or mdd == 0:
+        return np.nan
+    return float(ann_return / abs(mdd))
+
+
+def mean_holding_horizon_per_asset(theta_exec: pd.DataFrame) -> float:
+    durations: list[int] = []
+    for col in theta_exec.columns:
+        sign = np.sign(theta_exec[col].fillna(0.0))
+        flips = (sign != sign.shift()).cumsum()
+        for _, grp in sign.groupby(flips):
+            if grp.iloc[0] != 0:
+                durations.append(len(grp))
+    return float(np.mean(durations)) if durations else np.nan
+
+
 def metrics_on_window(
     net_portfolio_value: pd.Series,
     turnover: pd.Series,
@@ -358,4 +394,67 @@ def metrics_on_window(
         "mean_turnover": float(turn.mean()) if len(turn) else np.nan,
         "cost_to_gross_ratio": ratio,
         "active_days_pct": active_days_pct,
+    }
+
+
+def summarize_holdout_model(
+    label: str,
+    backtest_out: dict[str, pd.DataFrame | pd.Series],
+    holdout_index: pd.Index,
+    trading_days: int = 252,
+    initial_capital: float = 10_000.0,
+) -> dict[str, float | str | bool | None]:
+    net_portfolio_value = backtest_out["net_portfolio_value"]
+    gross_pnl = backtest_out["gross_pnl"]
+    net_pnl = backtest_out["net_pnl"]
+    cost_t = backtest_out["cost_t"]
+    turnover = backtest_out["turnover"]
+    theta_exec = backtest_out["theta_exec"]
+    liquidated_at = backtest_out.get("liquidated_at")
+
+    eq_eval = net_portfolio_value.reindex(holdout_index).dropna()
+    r_eval = eq_eval.pct_change().replace([np.inf, -np.inf], np.nan).dropna()
+    gross_eval = gross_pnl.reindex(holdout_index).dropna()
+    net_eval = net_pnl.reindex(holdout_index).dropna()
+    cost_eval = cost_t.reindex(holdout_index).dropna()
+
+    holdout_start = holdout_index.min()
+    holdout_start_equity = (
+        float(net_portfolio_value.reindex([holdout_start]).iloc[0])
+        if holdout_start in net_portfolio_value.index
+        else np.nan
+    )
+    liquidated_before_holdout = bool(
+        liquidated_at is not None and pd.Timestamp(liquidated_at) < pd.Timestamp(holdout_start)
+    )
+
+    total_abs_gross = float(gross_eval.abs().sum()) if len(gross_eval) else 0.0
+    total_cost = float(cost_eval.sum()) if len(cost_eval) else 0.0
+
+    return {
+        "model": label,
+        "n_days": int(len(eq_eval)),
+        "holdout_start_equity": holdout_start_equity,
+        "liquidated_at": None if liquidated_at is None else str(pd.Timestamp(liquidated_at)),
+        "liquidated_before_holdout": liquidated_before_holdout,
+        "sharpe": sharpe_ratio(r_eval, trading_days),
+        "sortino": sortino_ratio(r_eval, trading_days=trading_days),
+        "calmar": calmar_ratio(r_eval, eq_eval, trading_days),
+        "max_drawdown": max_drawdown(eq_eval),
+        "mean_turnover": float(turnover.reindex(holdout_index).mean()),
+        "total_gross_pnl": float(gross_eval.sum()) if len(gross_eval) else np.nan,
+        "total_cost": total_cost,
+        "total_net_pnl": float(net_eval.sum()) if len(net_eval) else np.nan,
+        "pct_return_on_v0": (
+            float(net_eval.sum() / initial_capital) if len(net_eval) else np.nan
+        ),
+        "cost_to_gross_ratio": (
+            float(total_cost / total_abs_gross) if total_abs_gross > 0 else np.nan
+        ),
+        "final_net_equity": float(eq_eval.iloc[-1]) if len(eq_eval) else np.nan,
+        "active_days_pct": (
+            float(theta_exec.reindex(holdout_index).abs().sum(axis=1).gt(0).mean())
+            if len(eq_eval)
+            else np.nan
+        ),
     }
