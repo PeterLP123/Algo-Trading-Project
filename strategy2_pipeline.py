@@ -6,6 +6,8 @@ import pandas as pd
 from strategy_helpers import ensure_utc_index
 from wf_trend_pipeline import calmar_ratio, max_drawdown, sharpe_ratio, sortino_ratio
 
+GROSS_CAP = 100_000.0
+
 
 def build_s2_features(cg_close: pd.DataFrame, cg_notional: pd.DataFrame) -> dict:
     close = ensure_utc_index(cg_close).sort_index()
@@ -68,6 +70,7 @@ def make_s2_params(
     roc_window: int,
     roc_pct: float,
     crash_threshold: float | None,
+    gross_util: float = 1.0,
 ) -> dict:
     return {
         "entry_pct": float(entry_pct),
@@ -77,6 +80,7 @@ def make_s2_params(
         "roc_window": int(roc_window),
         "roc_pct": float(roc_pct),
         "crash_threshold": None if crash_threshold is None else float(crash_threshold),
+        "gross_util": float(gross_util),
     }
 
 
@@ -86,6 +90,7 @@ def run_s2_strategy(
     alt_universe: list[str],
     initial_capital: float,
     half_spread_frac: pd.DataFrame,
+    gross_util: float = 1.0,
 ) -> dict:
     entry_pct = float(params["entry_pct"])
     lookback = int(params["lookback"])
@@ -200,7 +205,8 @@ def run_s2_strategy(
 
         carried_theta_t = prev_theta * (1.0 + prev_returns)
         equity_before_trade = float(equity_prev)
-        target_theta_t = target_weights_t * equity_before_trade
+        gross_target = min(initial_capital * gross_util, GROSS_CAP, equity_before_trade * 10.0)
+        target_theta_t = target_weights_t * gross_target
         delta_theta_t = target_theta_t - carried_theta_t
 
         turnover_t = float(delta_theta_t.abs().sum())
