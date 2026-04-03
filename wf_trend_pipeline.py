@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import cvxpy as cp
+from sklearn.covariance import LedoitWolf
 
 
 def abdi_ranaldo_spread(frame: pd.DataFrame, window: int = 21) -> pd.Series:
@@ -64,6 +66,30 @@ def apply_rebalance_theta(
     return out.ffill()
 
 
+def mvo_weights(
+    mu: np.ndarray,
+    Sigma: np.ndarray,
+    gamma: float,
+    gross_limit: float = 1.0,
+) -> np.ndarray:
+    """Solve: max μᵀw − (γ/2) wᵀΣw  s.t. ‖w‖₁ ≤ gross_limit.
+
+    Returns np.zeros(n) on solver failure or non-optimal status.
+    """
+    n = len(mu)
+    w = cp.Variable(n)
+    objective = cp.Maximize(mu @ w - (gamma / 2.0) * cp.quad_form(w, Sigma))
+    constraints = [cp.norm1(w) <= gross_limit]
+    problem = cp.Problem(objective, constraints)
+    try:
+        problem.solve(solver=cp.CLARABEL, warm_start=True)
+        if problem.status != "optimal" or w.value is None:
+            return np.zeros(n)
+        return np.array(w.value, dtype=float)
+    except Exception:
+        return np.zeros(n)
+
+
 def build_signal_and_theta(
     asset_panel_slice: pd.DataFrame,
     symbols: list[str],
@@ -74,6 +100,9 @@ def build_signal_and_theta(
     signal_clip: float,
     gross_cap: float,
     rebalance_every: int,
+    use_mvo: bool = False,
+    cov_window: int = 120,
+    gamma: float = 1.0,
     return_details: bool = False,
 ) -> pd.DataFrame | dict[str, pd.DataFrame | pd.Series]:
     close_px = asset_panel_slice["close"]
@@ -114,14 +143,56 @@ def build_signal_and_theta(
     z = signal_panel["z"]
     tr = signal_panel["trend_raw"]
     vol = signal_panel["vol_20"]
-    # z dead-zone only; w_risk = w_raw / vol_20 is the single vol-adjusted sizing step
     active = (z.abs() > dead_zone) & z.notna()
-    w_raw = tr.where(active, 0.0)
-    sigma = vol.replace(0.0, np.nan)
-    w_risk = w_raw / sigma
-    denom = w_risk.abs().sum(axis=1)
-    denom_safe = denom.replace(0.0, np.nan)
-    w_tilde = w_risk.div(denom_safe, axis=0).fillna(0.0)
+
+    if use_mvo:
+        # Build a (n_dates × n_assets) daily-returns panel for covariance estimation.
+        returns_panel = pd.concat(
+            [close_px[s].pct_change().rename(s) for s in symbols], axis=1
+        )
+        n_assets = len(symbols)
+        min_hist = n_assets + 10  # guard: need at least this many clean rows
+        w_tilde_arr = np.zeros((len(close_px), n_assets), dtype=float)
+
+        for t_idx in range(len(close_px)):
+            z_t = z.iloc[t_idx].to_numpy(dtype=float)
+            active_t = active.iloc[t_idx].to_numpy(dtype=bool)
+            # Zero out inactive assets to honour the dead-zone threshold.
+            mu_t = np.where(active_t, z_t, 0.0)
+            n_active = int(active_t.sum())
+
+            if t_idx < cov_window:
+                # Not enough history yet: equal-weight fallback.
+                w_row = (
+                    np.where(active_t, np.sign(z_t) / n_active, 0.0)
+                    if n_active > 0 else np.zeros(n_assets)
+                )
+            else:
+                cov_slice = returns_panel.iloc[t_idx - cov_window : t_idx].dropna()
+                if len(cov_slice) < min_hist:
+                    # Too many NaN rows in window: equal-weight fallback.
+                    w_row = (
+                        np.where(active_t, np.sign(z_t) / n_active, 0.0)
+                        if n_active > 0 else np.zeros(n_assets)
+                    )
+                else:
+                    Sigma = LedoitWolf().fit(cov_slice.values).covariance_
+                    w_row = mvo_weights(mu_t, Sigma, gamma=gamma)
+
+            w_tilde_arr[t_idx] = w_row
+
+        w_tilde = pd.DataFrame(w_tilde_arr, index=close_px.index, columns=symbols)
+
+    else:
+        # Original inverse-volatility path (unchanged).
+        # z dead-zone only; w_risk = w_raw / vol_20 is the single vol-adjusted sizing step
+        w_raw = tr.where(active, 0.0)
+        sigma = vol.replace(0.0, np.nan)
+        w_risk = w_raw / sigma
+        denom = w_risk.abs().sum(axis=1)
+        denom_safe = denom.replace(0.0, np.nan)
+        w_tilde = w_risk.div(denom_safe, axis=0).fillna(0.0)
+
     theta_target = gross_cap * w_tilde
     rebalance_mask = make_rebalance_mask(theta_target.index, rebalance_every)
     theta = apply_rebalance_theta(theta_target, rebalance_every, rebalance_mask=rebalance_mask)
