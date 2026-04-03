@@ -329,24 +329,27 @@ def summarize_s2_run(run_state: dict, mask: pd.Index, label: str, trading_days: 
             "cost_drag": cost_drag,
             "mean_turnover": mean_turnover,
         }
+    start_eq = float(eq.iloc[0])
+    end_eq = float(eq.iloc[-1])
     n_td = len(r)
     ann_return = (
-        float((eq.iloc[-1] / eq.iloc[0]) ** (trading_days / n_td) - 1.0)
-        if n_td > 1 and eq.iloc[0] > 0 and eq.iloc[-1] > 0
+        float((end_eq / start_eq) ** (trading_days / n_td) - 1.0)
+        if n_td > 1 and start_eq > 0 and end_eq > 0
         else np.nan
     )
+    total_return = float(end_eq / start_eq - 1.0) if start_eq > 0 else np.nan
     return {
         "sample": label,
         "n_days": int(m.sum()),
         "trade_entries": trade_entries,
         "active_days": active_days,
-        "total_return": float(eq.iloc[-1] / eq.iloc[0] - 1.0),
+        "total_return": total_return,
         "ann_return": ann_return,
         "sharpe": sharpe_ratio(r, trading_days),
         "sortino": sortino_ratio(r, trading_days=trading_days),
         "calmar": calmar_ratio(r, eq, trading_days),
         "max_drawdown": max_drawdown(eq),
-        "total_net_pnl": float(eq.iloc[-1] - eq.iloc[0]),
+        "total_net_pnl": float(end_eq - start_eq),
         "cost_drag": cost_drag,
         "mean_turnover": mean_turnover,
     }
