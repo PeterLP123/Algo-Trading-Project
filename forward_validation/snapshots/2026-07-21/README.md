@@ -1,5 +1,7 @@
 # Strategy 1 forward snapshot — 21 July 2026
 
+> **Superseded:** this first snapshot started the backtest index on 1 January 2020 instead of the submitted notebook's return-aligned 2 January start. That shifted the fixed 10-day rebalance phase. The artifacts are retained for auditability, but the [corrected snapshot](../2026-07-21-corrected/README.md) should be used for results.
+
 This is the first dated evaluation after the original 20 March 2026 research cutoff. The selected Strategy 1 specification was not changed or re-estimated.
 
 ![Frozen Strategy 1 forward performance against BTC and the equal-weight basket](cumulative_returns.png)

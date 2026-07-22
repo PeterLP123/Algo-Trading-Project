@@ -1,0 +1,44 @@
+{
+  "strategy": "btc_dominance_mean_reversion",
+  "frozen_at": "2026-03-20",
+  "symbols": {
+    "BTC": "BTC/USDT",
+    "ETH": "ETH/USDT",
+    "BNB": "BNB/USDT",
+    "SOL": "SOL/USDT",
+    "XRP": "XRP/USDT",
+    "ADA": "ADA/USDT",
+    "AVAX": "AVAX/USDT",
+    "DOT": "DOT/USDT",
+    "LINK": "LINK/USDT",
+    "LTC": "LTC/USDT",
+    "MATIC": "MATIC/USDT"
+  },
+  "unavailable_forward_symbols": [
+    "MATIC"
+  ],
+  "parameters": {
+    "entry_pct": 0.8,
+    "lookback": 126,
+    "exit_z": 0.0,
+    "max_hold": 7,
+    "roc_window": 3,
+    "roc_pct": 0.95,
+    "crash_threshold": null,
+    "gross_util": 2.0
+  },
+  "execution": {
+    "initial_capital": 10000.0,
+    "gross_cap": 100000.0,
+    "signal_execution_lag_bars": 1,
+    "spread_estimator": "Abdi-Ranaldo",
+    "spread_smoothing_window": 21,
+    "trading_days_per_year": 252
+  },
+  "frozen_history": {
+    "path": "s2_binance_cache.pkl",
+    "sha256": "33c3d560f33c6bfe739d0c747c596a1869536fd6cc77785bd0ca255441d8a237",
+    "start": "2020-01-02",
+    "end": "2026-03-20"
+  }
+}

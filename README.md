@@ -8,7 +8,11 @@ A cost-aware empirical comparison of two systematic cryptocurrency strategies: m
 
 [Read the final report](report/final_report.pdf) · [Explore the research notebook](notebooks/strategy_analysis.ipynb)
 
-![Full-sample cumulative returns for both strategies](report/figures/cumulative_returns.png)
+![Original backtest extended with frozen Strategy 1 and Strategy 2 forward validation](report/figures/readme_performance_overview.png)
+
+The original cumulative-return paths are extended through a separately shaded frozen-forward
+period. Both strategies retain their submitted specifications; the added observations are not part
+of model selection or the original holdout.
 
 ## Research question
 
@@ -17,7 +21,7 @@ Can two economically distinct crypto signals retain useful risk-adjusted perform
 - **Strategy 1 - trend following:** volatility-normalised moving-average signals across BTC, ETH, BNB, and ADA, with Ledoit-Wolf covariance estimation and constrained mean-variance sizing.
 - **Strategy 2 - BTC-dominance mean reversion:** an equal-weight altcoin basket entered after extreme increases in BTC's share of aggregate Binance notional volume.
 
-The sample contains 2,271 daily observations from 1 January 2020 to 20 March 2026. Strategy parameters are selected before evaluating the final 126 daily observations.
+The raw sample contains 2,271 daily candles from 1 January 2020 to 20 March 2026; the return-aligned strategy panel begins on 2 January. Strategy parameters are selected before evaluating the final 126 daily observations.
 
 ## Main results
 
@@ -33,17 +37,16 @@ Strategy 1 retained positive holdout performance and shallow drawdown, although 
 
 ## Frozen forward validation
 
-Strategy 1 is now monitored after the original 20 March 2026 cutoff using its selected parameters exactly as reported—no new search, tuning, or fallback selection is allowed. The forward runner verifies a hashed specification, requires the canonical pre-cutoff histories to remain unchanged, fetches only later completed Binance daily candles, and preserves the original signal, covariance, rebalance, position, and transaction-cost state.
+Both strategies are now monitored after the original 20 March 2026 cutoff using their selected parameters exactly as reported—no new search, tuning, or fallback selection is allowed. The runners verify hashed specifications and pre-cutoff histories, fetch only later completed Binance daily candles, and preserve signal, position, and transaction-cost state across the boundary.
 
 ```bash
 python forward_validation.py
+python strategy2_forward_validation.py
 ```
 
 See [`forward_validation/README.md`](forward_validation/README.md) for the freeze contract, dated-snapshot workflow, and artifact schema. New results are explicitly labelled forward validation and do not replace the original holdout.
 
-The first immutable snapshot, covering 123 completed days through 21 July 2026, recorded a **3.98% net return**, **1.053 Sharpe**, **−5.15% maximum drawdown**, and **+1,468 USDT net PnL** while BTC buy-and-hold returned −5.61%. See the [dated snapshot](forward_validation/snapshots/2026-07-21/README.md) and its machine-readable daily accounting. The window remains too short to establish durable out-of-sample performance.
-
-![Frozen Strategy 1 forward performance](forward_validation/snapshots/2026-07-21/cumulative_returns.png)
+The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 1 returned **+3.52%** with a **1.109 Sharpe**, **−4.26% maximum drawdown**, and **+1,565 USDT net PnL**. Strategy 2 returned **−10.36%** with a **−1.850 Sharpe**, **−10.73% maximum drawdown**, and **−1,563 USDT net PnL** across four entries. See the [dated snapshot](forward_validation/snapshots/2026-07-21-corrected/README.md) and its machine-readable accounting. The window remains too short to establish durable performance for either strategy.
 
 ## Methodology
 
@@ -62,6 +65,7 @@ The first immutable snapshot, covering 123 completed days through 21 July 2026, 
 ├── notebooks/
 │   └── strategy_analysis.ipynb      # complete research workflow and saved outputs
 ├── report/
+│   ├── build_readme_performance_figure.py # reproducible README overview
 │   ├── final_report.pdf             # compiled six-page report
 │   ├── final_report.tex             # report source
 │   ├── references.bib
@@ -71,8 +75,10 @@ The first immutable snapshot, covering 123 completed days through 21 July 2026, 
 │   └── test_forward_validation.py   # freeze-boundary and no-retuning checks
 ├── forward_validation/
 │   ├── frozen_strategy1.json        # hashed selected specification
+│   ├── frozen_strategy2.json        # hashed Strategy 2 specification
 │   └── README.md                    # forward-test protocol and commands
 ├── forward_validation.py            # post-2026-03-20 Strategy 1 runner
+├── strategy2_forward_validation.py  # post-2026-03-20 Strategy 2 runner
 ├── strategy_helpers.py              # data quality and shared utilities
 ├── wf_trend_pipeline.py             # Strategy 1 implementation
 ├── strategy2_pipeline.py            # Strategy 2 implementation
@@ -117,6 +123,12 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
+Rebuild the README performance overview from the committed historical figure and frozen snapshot:
+
+```bash
+python report/build_readme_performance_figure.py
+```
+
 Build the report with a TeX Live installation:
 
 ```bash
@@ -131,6 +143,7 @@ The full notebook is substantially slower and requires either the local caches o
 - This is a historical coursework study, not a live trading system.
 - Binance notional-volume share is a proxy for BTC dominance, not total-market-cap dominance.
 - The final holdout is short, and Strategy 2 produces only two holdout trades.
+- The 123-day forward window is also short; Strategy 2 entered only four times.
 - Fees, market impact, funding, borrow constraints, taxes, and operational risk are not modelled in full.
 - Strategy 1's positive holdout result is concentrated in BTC and should not be interpreted as broad cross-asset validation.
 
