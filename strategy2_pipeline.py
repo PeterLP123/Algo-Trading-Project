@@ -23,13 +23,18 @@ def build_s2_features(cg_close: pd.DataFrame, cg_notional: pd.DataFrame) -> dict
     dom_zscore = (
         (btc_dom - btc_dom.rolling(20).mean()) / btc_dom.rolling(20).std(ddof=1)
     ).rename("dom_level_zscore_20")
-    alt_returns = close[alt_universe].pct_change().replace([np.inf, -np.inf], np.nan)
-    btc_30d_ret = close["BTC"].pct_change(30).rename("btc_30d_ret")
+    padded_close = close.ffill()
+    alt_returns = padded_close[alt_universe].pct_change(fill_method=None).replace(
+        [np.inf, -np.inf], np.nan
+    )
+    btc_30d_ret = padded_close["BTC"].pct_change(30, fill_method=None).rename("btc_30d_ret")
     dom_roc = btc_dom.diff(3).rename("dom_roc_3")
 
-    rel_ret_3d = close[alt_universe].pct_change(3).subtract(close["BTC"].pct_change(3), axis=0)
+    rel_ret_3d = padded_close[alt_universe].pct_change(3, fill_method=None).subtract(
+        padded_close["BTC"].pct_change(3, fill_method=None), axis=0
+    )
     underperf_score = (-rel_ret_3d).clip(lower=0.0)
-    vol_20 = close[alt_universe].pct_change().rolling(20).std()
+    vol_20 = padded_close[alt_universe].pct_change(fill_method=None).rolling(20).std()
     inv_vol = (1.0 / vol_20).replace([np.inf, -np.inf], np.nan)
     raw_basket = underperf_score.multiply(inv_vol)
     tilted_basket_weights = raw_basket.div(raw_basket.sum(axis=1), axis=0).fillna(0.0)

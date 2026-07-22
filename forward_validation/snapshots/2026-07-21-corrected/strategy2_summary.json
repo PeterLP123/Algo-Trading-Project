@@ -1,0 +1,90 @@
+{
+  "status": "frozen_strategy2_forward_validation",
+  "generated_at_utc": "2026-07-22T20:26:00.549485+00:00",
+  "data_source": "Binance daily OHLCV via ccxt",
+  "freeze_cutoff": "2026-03-20",
+  "requested_end_date": "2026-07-21",
+  "frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "frozen_spec": {
+    "strategy": "btc_dominance_mean_reversion",
+    "frozen_at": "2026-03-20",
+    "symbols": {
+      "BTC": "BTC/USDT",
+      "ETH": "ETH/USDT",
+      "BNB": "BNB/USDT",
+      "SOL": "SOL/USDT",
+      "XRP": "XRP/USDT",
+      "ADA": "ADA/USDT",
+      "AVAX": "AVAX/USDT",
+      "DOT": "DOT/USDT",
+      "LINK": "LINK/USDT",
+      "LTC": "LTC/USDT",
+      "MATIC": "MATIC/USDT"
+    },
+    "unavailable_forward_symbols": [
+      "MATIC"
+    ],
+    "parameters": {
+      "entry_pct": 0.8,
+      "lookback": 126,
+      "exit_z": 0.0,
+      "max_hold": 7,
+      "roc_window": 3,
+      "roc_pct": 0.95,
+      "crash_threshold": null,
+      "gross_util": 2.0
+    },
+    "execution": {
+      "initial_capital": 10000.0,
+      "gross_cap": 100000.0,
+      "signal_execution_lag_bars": 1,
+      "spread_estimator": "Abdi-Ranaldo",
+      "spread_smoothing_window": 21,
+      "trading_days_per_year": 252
+    },
+    "frozen_history": {
+      "path": "s2_binance_cache.pkl",
+      "sha256": "33c3d560f33c6bfe739d0c747c596a1869536fd6cc77785bd0ca255441d8a237",
+      "start": "2020-01-02",
+      "end": "2026-03-20"
+    }
+  },
+  "forward_cache_sha256": {
+    "BTCUSDT_1d_forward.parquet": "dab15aca305491422ad1b06201a2c0682d51235a2d3b0e9a567233ae511343d3",
+    "ETHUSDT_1d_forward.parquet": "b2108b8e7a7ca62af3a083ac9e2a272e871060df2380ef40ee4bd9368b26bddd",
+    "BNBUSDT_1d_forward.parquet": "b33cb36951372166f18c77b6e14401cf1130a00e91acaf34cd1a1b349172b692",
+    "SOLUSDT_1d_forward.parquet": "69e69daf587d57c2a88fc112d66c8bbd0157a3645a9e4dac2c6f34938c4fad6a",
+    "XRPUSDT_1d_forward.parquet": "6462aad6551390ad9a573f9ec6f94659224a78bf1463288826cc38fe8aa74918",
+    "ADAUSDT_1d_forward.parquet": "c8755d64718dd23bdb4cac25d422f1d758d0312605f22da1f6f78ce36302aaff",
+    "AVAXUSDT_1d_forward.parquet": "0fb5b8a721e170c201a5390f57e3b78eec71d68cfe41e988334671a9ce1a0762",
+    "DOTUSDT_1d_forward.parquet": "5979fa39877664470692753b1b334ba30cc0e3ae0d4fb2f5a48e3e9aa37fbc44",
+    "LINKUSDT_1d_forward.parquet": "18811b44240514f90ca5b5f8d5c1e2a2b1cc0f20125296f8552e67274886f294",
+    "LTCUSDT_1d_forward.parquet": "4dc100bed5067f2b0f1b0487d9b9ee89f7e4a1016aa42f325103f2466043f7ac"
+  },
+  "metrics": {
+    "start": "2026-03-21",
+    "end": "2026-07-21",
+    "n_days": 123,
+    "anchor_date": "2026-03-20",
+    "anchor_equity": 15090.615187072539,
+    "final_equity": 13527.870423058574,
+    "total_return": -0.10355739276637965,
+    "sharpe": -1.8504595415049483,
+    "max_drawdown": -0.10729132561807556,
+    "total_gross_pnl": -450.7992135042485,
+    "total_cost": 1111.9455505097194,
+    "total_net_pnl": -1562.744764013968,
+    "trade_entries": 4,
+    "entry_dates": [
+      "2026-03-21",
+      "2026-05-27",
+      "2026-06-19",
+      "2026-06-23"
+    ],
+    "active_days": 9
+  },
+  "artifacts": {
+    "daily": "strategy2_daily.csv",
+    "summary": "strategy2_summary.json"
+  }
+}

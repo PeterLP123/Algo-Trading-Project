@@ -1,0 +1,105 @@
+{
+  "status": "frozen_forward_validation",
+  "generated_at_utc": "2026-07-22T20:25:48.377330+00:00",
+  "data_source": "Binance daily OHLCV via ccxt",
+  "freeze_cutoff": "2026-03-20",
+  "requested_end_date": "2026-07-21",
+  "frozen_spec_digest": "769a3b2d040c0977f5dd51fc143dd24dcaa2f1202707554f79a137d3d3650b2a",
+  "frozen_spec": {
+    "name": "strategy_1_walk_forward_selected",
+    "frozen_at": "2026-03-20",
+    "selection_source": "notebooks/strategy_analysis.ipynb",
+    "symbols": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "BNB/USDT",
+      "ADA/USDT"
+    ],
+    "timeframe": "1d",
+    "frozen_history_sha256": {
+      "BTCUSDT_1d_cleaned.parquet": "d4b09f630191bd399955a165ac3c3bec938b7951a2f514f6e780eae9cc783cac",
+      "ETHUSDT_1d_cleaned.parquet": "e92b17a8502f22182d240087cfb5d1b60355b9c7bd381e95354f8e09c9152b8a",
+      "BNBUSDT_1d_cleaned.parquet": "416629ab25306e325af68aae4504ad146ff00b5ee6a2731209187de2dddcb531",
+      "ADAUSDT_1d_cleaned.parquet": "42df444a5a9d9e27e8f6c4c891ff3a33eefdf46835d07ab0ced5167f81594187"
+    },
+    "parameters": {
+      "ma_window": 140,
+      "vol_window": 30,
+      "dead_zone": 1.0,
+      "signal_clip": 5.0,
+      "gross_cap": 10000.0,
+      "rebalance_every": 10,
+      "use_mvo": true,
+      "cov_window": 120,
+      "gamma": 1.0
+    },
+    "execution": {
+      "initial_capital": 10000.0,
+      "spread_estimator": "Abdi-Ranaldo",
+      "spread_window": 21,
+      "lag_spread_one_bar": true,
+      "signal_execution_lag_bars": 1,
+      "trading_days_per_year": 252
+    }
+  },
+  "frozen_history_sha256": {
+    "BTCUSDT_1d_cleaned.parquet": "d4b09f630191bd399955a165ac3c3bec938b7951a2f514f6e780eae9cc783cac",
+    "ETHUSDT_1d_cleaned.parquet": "e92b17a8502f22182d240087cfb5d1b60355b9c7bd381e95354f8e09c9152b8a",
+    "BNBUSDT_1d_cleaned.parquet": "416629ab25306e325af68aae4504ad146ff00b5ee6a2731209187de2dddcb531",
+    "ADAUSDT_1d_cleaned.parquet": "42df444a5a9d9e27e8f6c4c891ff3a33eefdf46835d07ab0ced5167f81594187"
+  },
+  "forward_cache_sha256": {
+    "BTCUSDT_1d_forward.parquet": "3cc8c5b864458130f50a6c838529d951b283d33b1e67f2438ab3502674e4700d",
+    "ETHUSDT_1d_forward.parquet": "e3b44a8729ae84ff67c373ca402a9ce391241aae7c3a2f079724ef40da03ecd7",
+    "BNBUSDT_1d_forward.parquet": "4eb3185ccd155f5d0ea0536f2ec35ad2461479090b1fc5e08d87c50a577190c0",
+    "ADAUSDT_1d_forward.parquet": "d5e0d528fc9872ee95790107b2eeea72cb4124e764d7b429137ce1bd59046854"
+  },
+  "metrics": {
+    "start": "2026-03-21",
+    "end": "2026-07-21",
+    "n_days": 123,
+    "anchor_date": "2026-03-20",
+    "anchor_equity": 44433.78553769693,
+    "final_equity": 45998.669736457385,
+    "total_return": 0.03521834072482588,
+    "annualised_return": 0.07348796928072199,
+    "sharpe": 1.1090157470393678,
+    "sortino": 1.9480333427951604,
+    "max_drawdown": -0.04257973009279398,
+    "total_gross_pnl": 1804.9573003630705,
+    "total_cost": 240.0731016026179,
+    "total_net_pnl": 1564.8841987604528,
+    "mean_daily_turnover": 572.1930483161548,
+    "cost_to_absolute_gross_ratio": 0.013335734863667858,
+    "active_days_pct": 1.0,
+    "btc_buy_and_hold_return": -0.05608465548434982,
+    "equal_weight_buy_and_hold_return": -0.15342852200408974,
+    "asset_diagnostics": {
+      "BTCUSDT": {
+        "total_gross_pnl": 178.96402450129045,
+        "mean_absolute_exposure": 6905.2767870363205,
+        "total_turnover": 34389.44185258591
+      },
+      "ETHUSDT": {
+        "total_gross_pnl": 1047.8657680064525,
+        "mean_absolute_exposure": 787.2980967798698,
+        "total_turnover": 19079.156917144763
+      },
+      "BNBUSDT": {
+        "total_gross_pnl": 489.8150603224102,
+        "mean_absolute_exposure": 2305.353438535488,
+        "total_turnover": 16441.24598370839
+      },
+      "ADAUSDT": {
+        "total_gross_pnl": 88.3124475329181,
+        "mean_absolute_exposure": 19.850604769193524,
+        "total_turnover": 469.9001894479761
+      }
+    }
+  },
+  "artifacts": {
+    "daily": "daily.csv",
+    "summary": "summary.json",
+    "figure": "cumulative_returns.png"
+  }
+}

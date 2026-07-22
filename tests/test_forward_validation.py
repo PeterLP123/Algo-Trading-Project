@@ -98,6 +98,17 @@ def test_combined_history_starts_forward_window_strictly_after_cutoff() -> None:
     assert combined.loc[combined.index <= fv.FREEZE_CUTOFF].index.equals(history_index)
 
 
+def test_asset_panel_matches_submitted_return_aligned_start() -> None:
+    index = pd.date_range("2020-01-01", periods=4, freq="D", tz="UTC")
+    symbols = ["BTC/USDT", "ETH/USDT"]
+    frames = {symbol: make_ohlcv(index) for symbol in symbols}
+
+    panel = fv.build_asset_panel(frames, symbols)
+
+    assert panel.index.min() == index[1]
+    assert panel.index.equals(index[1:])
+
+
 def test_modified_prefreeze_history_is_rejected() -> None:
     history_index = pd.date_range(end=fv.FREEZE_CUTOFF - pd.Timedelta(days=1), periods=5, freq="D")
 
@@ -181,3 +192,15 @@ def test_committed_forward_snapshot_is_self_consistent() -> None:
     assert daily["date"].max() == pd.Timestamp(metrics["end"], tz="UTC")
     assert daily["net_pnl"].sum() == pytest.approx(metrics["total_net_pnl"], rel=1e-9)
     assert daily.iloc[-1]["cumulative_return"] == pytest.approx(metrics["total_return"], rel=1e-9)
+
+
+def test_corrected_snapshot_uses_submitted_rebalance_phase() -> None:
+    snapshot = Path("forward_validation/snapshots/2026-07-21-corrected")
+    summary = json.loads((snapshot / "summary.json").read_text(encoding="utf-8"))
+    daily = pd.read_csv(snapshot / "daily.csv", parse_dates=["date"])
+    metrics = summary["metrics"]
+
+    assert len(daily) == metrics["n_days"] == 123
+    assert metrics["anchor_equity"] == pytest.approx(44_433.78553769693)
+    assert metrics["total_return"] == pytest.approx(0.03521834072482588)
+    assert daily["net_pnl"].sum() == pytest.approx(metrics["total_net_pnl"], rel=1e-9)

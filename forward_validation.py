@@ -295,6 +295,10 @@ def build_asset_panel(frames: dict[str, pd.DataFrame], symbols: list[str]) -> pd
         axis=1,
         join="inner",
     ).dropna(how="any")
+    # The submitted notebook drops the first close observation when it aligns
+    # one-period returns. Preserve that exact index so the 10-day rebalance
+    # schedule remains continuous across the frozen boundary.
+    close = close.iloc[1:]
     close.columns = pd.MultiIndex.from_product([["close"], symbols], names=["field", "asset"])
     return close
 
