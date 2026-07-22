@@ -1,51 +1,46 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+Guidance for coding agents working in this repository.
 
-## Project Overview
+## Project overview
 
-Algorithmic trading research project (UCL COMP0051) analyzing cryptocurrency OHLCV data from Binance. The entire codebase lives in a single Jupyter notebook (`strategy.ipynb`) backed by Parquet data files.
+This UCL COMP0051 research project compares two daily cryptocurrency strategies:
 
-## Running the Notebook
+1. multi-asset trend following with walk-forward parameter selection, covariance-aware sizing, and an untouched holdout;
+2. BTC-dominance mean reversion across an altcoin basket, tuned with Optuna.
+
+Both strategies use Binance OHLCV data and an Abdi-Ranaldo transaction-cost proxy. The risk-free series is the FRED Effective Federal Funds Rate.
+
+## Canonical files
+
+- `notebooks/strategy_analysis.ipynb` - end-to-end research notebook and saved results.
+- `strategy_helpers.py` - data, audit, and shared research utilities.
+- `wf_trend_pipeline.py` - Strategy 1 signal, sizing, backtest, and metrics.
+- `strategy2_pipeline.py` - Strategy 2 features, execution, and evaluation.
+- `recompute_gross_turnover.py` - reproducibility check for IS/OOS PnL and turnover.
+- `report/final_report.tex` and `report/final_report.pdf` - final report source and compiled artifact.
+
+## Running the project
 
 ```bash
-# Install dependencies
-pip install pandas numpy matplotlib ccxt pyarrow jupyterlab
-
-# Launch Jupyter
-jupyter lab strategy.ipynb
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+jupyter lab notebooks/strategy_analysis.ipynb
 ```
 
-Execute cells top-to-bottom. Cell 4 hits the Binance API and re-downloads ~15,760 bars per symbol — skip it if raw Parquet files already exist in `data/`.
+Run Jupyter from the repository root because the notebook imports the root-level pipeline modules and uses root-relative `data_final/` and `output/` paths.
 
-## Data Layout
+## Data and secrets
 
-```
-data/
-  {SYMBOL}_1h.parquet              # raw OHLCV from Binance
-  processed/binance/
-    {SYMBOL}_1h_flagged.parquet    # raw + outlier flag columns added
-```
+Data, caches, Optuna databases, generated output, and `.env` are intentionally ignored. Do not commit them. A live FRED refresh requires `FRED_API_KEY`; use `.env.example` as the template. The notebook is cache-first by default, so a clean clone requires the documented refresh flags or local cached inputs.
 
-Symbols: `BTCUSDT`, `ETHUSDT`, `DOGEUSDT`, `SOLUSDT`. Parquet files are written/read via PyArrow directly (not `pd.read_parquet`) to avoid Arrow extension-type registration conflicts.
+## Validation
 
-## Architecture
-
-The notebook implements a linear ETL pipeline:
-
-1. **Fetch** — CCXT `fetch_ohlcv` against Binance, paginating from `SINCE = "2024-06-01"` in batches of 1000 bars with a 0.3 s rate-limit sleep.
-2. **Audit** — `audit_ohlcv(df, symbol, stage)` checks duplicates, gaps, nulls, non-positive prices, negative/zero volume, High < Low, and OHLC candle-rule violations.
-3. **Flag outliers** — `flag_ohlcv_outliers(df, rolling_window=72, zscore_threshold=5.0)` computes log returns, rolling z-scores, and appends `raw_return`, `return_zscore`, `is_outlier`, `clean_return` columns without modifying original candles.
-4. **Save** — Flagged DataFrames written to `processed/binance/`.
-
-Key configuration lives at the top of the fetch cell:
-```python
-SYMBOLS   = ["BTC/USDT", "ETH/USDT", "DOGE/USDT", "SOL/USDT"]
-TIMEFRAME = "1h"
-SINCE     = "2024-06-01"
-DATA_DIR  = Path("data")
+```bash
+python -m pytest -q
+python -m compileall -q strategy_helpers.py strategy2_pipeline.py wf_trend_pipeline.py recompute_gross_turnover.py
+cd report && latexmk -pdf -interaction=nonstopmode -halt-on-error final_report.tex
 ```
 
-## No Test / Lint Infrastructure
-
-There is no pytest, tox, black, flake8, or CI configuration. Validation is done inline via `audit_ohlcv` output.
+Notebook execution is data- and network-dependent. Preserve its final outputs unless intentionally recomputing the full experiment. Never turn a failed or incomplete rerun into the canonical notebook.

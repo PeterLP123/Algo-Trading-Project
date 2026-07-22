@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this project, please cite it using the metadata below."
+title: "Walk Forward Trend Following and BTC Dominance Mean Reversion in Cryptocurrency Markets"
+type: software
+authors:
+  - family-names: Prendergast
+    given-names: Peter
+repository-code: "https://github.com/PeterLP123/systematic-crypto-research"
+keywords:
+  - algorithmic trading
+  - cryptocurrency
+  - trend following
+  - mean reversion
+  - walk-forward analysis
