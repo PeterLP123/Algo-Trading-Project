@@ -1,4 +1,4 @@
-"""Trend strategy pipeline for walk-forward parameter search (strategy_final_v2)."""
+"""Trend strategy pipeline for the walk-forward research notebook."""
 
 from __future__ import annotations
 

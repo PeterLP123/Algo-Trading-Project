@@ -1,0 +1,291 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{parskip}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{titling}
+\usepackage[authoryear]{natbib}
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=black,
+  pdftitle={Walk Forward Trend Following and BTC Dominance Mean Reversion in Cryptocurrency Markets},
+  pdfauthor={Peter Prendergast}
+}
+\captionsetup[figure]{position=bottom}
+\captionsetup[table]{position=bottom}
+
+\setstretch{1.12}
+\setlength{\parskip}{0.30em}
+\setlength{\parindent}{0pt}
+\setlength{\droptitle}{-1.5cm}
+\setlength{\textfloatsep}{9pt plus 2pt minus 2pt}
+\setlength{\intextsep}{7pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+\setlength{\abovedisplayskip}{7pt plus 2pt minus 2pt}
+\setlength{\belowdisplayskip}{7pt plus 2pt minus 2pt}
+
+\pretitle{\begin{center}\LARGE\bfseries}
+\posttitle{\par\vspace{0.4em}\rule{0.8\textwidth}{0.5pt}\end{center}\vspace{0.8em}}
+\preauthor{\begin{center}\normalsize}
+\postauthor{\par\end{center}\vspace{-0.6em}}
+\predate{\begin{center}\normalsize}
+\postdate{\par\end{center}\vspace{0.8em}}
+
+\titleformat{\section}
+  {\large\bfseries}
+  {\thesection}{0.75em}{}
+\titleformat{\subsection}
+  {\normalsize\bfseries}
+  {\thesubsection}{0.75em}{}
+\titleformat{\subsubsection}
+  {\normalsize\itshape}
+  {\thesubsubsection}{0.75em}{}
+
+\titlespacing*{\section}{0pt}{0.95em}{0.35em}
+\titlespacing*{\subsection}{0pt}{0.75em}{0.25em}
+\titlespacing*{\subsubsection}{0pt}{0.50em}{0.12em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{COMP0051 Algorithmic Trading}
+\rhead{Coursework Report}
+\cfoot{\thepage}
+\setlength{\headheight}{15pt}
+
+\newcommand{\dailyreturn}{r_t}
+\newcommand{\riskfree}{r_t^{f}}
+\newcommand{\excessreturn}{r_t^{e}}
+\newcommand{\abs}[1]{\left|#1\right|}
+\DeclareMathOperator{\Cov}{Cov}
+
+\title{Walk Forward Trend Following and BTC Dominance Mean Reversion
+in Cryptocurrency Markets}
+\author{Peter Prendergast | Student ID: 25217979\\ University College London}
+\date{April 2026}
+
+\begin{document}
+\maketitle
+\pagenumbering{arabic}
+
+\section{Data Download and Visualisation}
+
+I obtained OHLCV data for four cryptocurrency asset pairs, specifically BTC/USDT, ETH/USDT, BNB/USDT, and ADA/USDT. The dataset is retrieved from Binance using the \texttt{ccxt} Python library. To align with the available FRED Federal Funds Rate series, the sample period runs from 1 January 2020 to 20 March 2026, resulting in a final sample of 2,271 daily observations. Daily frequency represented a compromise between capturing medium term momentum dynamics and maintaining manageable data volumes.
+
+Strategy 2 draws on a broader universe of 11 Binance spot pairs (BTC, ETH, BNB, SOL, XRP, ADA, AVAX, DOT, LINK, LTC, MATIC) to construct a diversified altcoin basket and a BTC dominance signal.
+
+\subsection{Data Cleaning}
+
+Each series is passed through a data cleaning pipeline that checks for duplicate timestamps, negative prices or trading volume, and inconsistencies in OHLCV bars. No structural issues are detected in any of the asset series, so the number of observations remains unchanged. Outliers are flagged for subsequent diagnostic analysis but are retained at this stage.
+
+\subsection{Excess Returns}
+
+The risk-free rate $\riskfree$ is based on the FRED Effective Federal Funds Rate (series DFF), converted from an annual percentage rate into a daily compounded rate:
+\begin{equation}
+    r_{\text{daily}}^{f} = \left(1 + \frac{\text{DFF}}{100}\right)^{1/365} - 1.
+\end{equation}
+
+After forward-filling the rate across calendar days to align with the asset return index, excess returns are computed as $\excessreturn = \dailyreturn - r_{t-1}^{f}$.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/excess_returns.png}
+    \caption{Daily excess return series for BTC/USDT, ETH/USDT, BNB/USDT, and ADA/USDT.}
+    \label{fig:excess_returns}
+\end{figure}
+
+At daily frequency, the per-period risk-free rate is economically negligible relative to cryptocurrency price movements. For example, a 5\% annual rate is only about $0.014\%$ per day, compared with typical daily crypto volatility of 3\%--5\% or more. As a result, subtracting $\riskfree$ has almost no effect on returns, signals, or backtest results at this horizon.
+
+\section{Strategy}
+
+Both strategies are implemented using the same period for training and testing. The initial portfolio value is set at $V_0 = \$10{,}000$, subject to a firm gross exposure constraint of $\sum_i |\theta_{t,i}| \leq \$100{,}000$.
+
+\subsection{Strategy 1: Trend-Following}
+
+\subsubsection{Rationale}
+
+As outlined in \citep{liu_tsyvinski_2021}, cryptocurrency assets, similarly to other asset classes exhibit time series momentum behaviour. The intuition being that assets which have had positive excess returns tend to sustain that trend for some time in bull markets, the opposite is also observed with negative excess returns during bear markets.
+
+\subsubsection{Signal Construction}
+For each asset $i$ at time $t$, I compute a volatility-normalised trend signal. This is done in two stages. First, I compute the raw trend $\tau^{\mathrm{raw}}_{i,t}$, which captures the deviation of the close price $p_{i,t}$ from its $w$-bar moving average:
+
+\begin{equation}
+    \tau^{\mathrm{raw}}_{i,t} = \frac{p_{i,t}}{\mathrm{MA}_{i,t}(w)} - 1.
+\end{equation}
+
+where $\mathrm{MA}_{i,t}(w)=\frac{1}{w}\sum_{k=0}^{w-1} p_{i,t-k}$.
+I standardise this signal by dividing it by the rolling standard deviation of simple returns over a $w_{\mathrm{vol}}$-bar window:
+
+\begin{equation}
+    z_{i,t} = \frac{\tau^{\mathrm{raw}}_{i,t}}{\sigma_{i,t}(w_{\mathrm{vol}})}.
+\end{equation}
+
+The z-score is clipped and the position direction is determined by a threshold with a dead zone to prevent noisy oscillations from needlessly increasing costs.
+
+\subsubsection{Position Sizing using Mean Variance Optimisation}
+
+For position sizing I implement MVO using shrinkage estimation of the rolling covariance matrix \citep{ledoit2004} with cvxpy quadratic programming.
+
+On bars where the signal is active ($\lvert z_{i,t} \rvert > \delta$), the raw weight is $w^{\mathrm{raw}}_{i,t} = \tau^{\mathrm{raw}}_{i,t}$, whereas for inactive bars it is zero.
+
+The optimisation step solves
+\[
+\max_w \; \mu^\top w - \frac{\gamma}{2} w^\top \hat{\Sigma}_t w
+\quad \text{subject to} \quad \|w\|_1 \leq 1,
+\]
+with $\gamma = 1$, where $\mu$ is proxied by the volatility scaled signal and $\hat{\Sigma}_t$ is the Ledoit Wolf shrinkage covariance estimate. While a diagonal inverse volatility approximation performed better in sample, the full MVO specification was preferred because it captures cross-asset covariance and should be more robust when correlations spike in stressed markets. Positions are rebalanced every $n$ days, a configurable frequency.
+
+\subsubsection{Parameter Selection}
+
+The parameters for the strategy were selected using a walk forward validation procedure. An untouched test window of 126 bars (\textasciitilde6 months) was kept for out of sample testing. This process used folds of 600 bars and a validation window of 100 bars, advancing by 100 bars per fold. This yielded 15 walk-forward folds of which every second were evaluated.
+
+The search grid used the following parameters: moving-average window $w$, volatility window $w_{\mathrm{vol}}$, dead-zone threshold $\delta$, rebalancing frequency $n$, and gross utilisation $u$. The signal clip was fixed at $\pm 5$, and the gross cap at $\$100{,}000$.
+
+Each candidate combination is evaluated across all folds and the sharpe ratio is computed. The combinations are then selected based on a stability penalised mean validation Sharpe:
+
+\begin{equation}
+    \mathrm{score} = \bar{S}_{\mathrm{val}} - \lambda\,\mathrm{std}(S_{\mathrm{val}}).
+\end{equation}
+
+where $\bar{S}_{\mathrm{val}}$ is the mean Sharpe ratio across folds, and $\mathrm{std}(S_{\mathrm{val}})$ is the cross-fold standard deviation. I set $\lambda = 0.1$ as the stability penalty. A candidate must have a positive mean Sharpe, and at least $55\%$ of folds must exhibit positive Sharpe ratios.
+
+This procedure selects $w = 140$ days, $w_{\mathrm{vol}} = 30$ days, $\delta = 1.0$, $n = 10$ days, and $u = 0.10$. This combination yields a mean Sharpe of $0.464$, with $62.5\%$ positive folds as well as an adjusted score of 0.306. This long moving average window is consistent with the findings of \citep{moskowitz2012timeseriesmomentum}.
+
+\subsection{Strategy 2: BTC Dominance Mean-Reversion}
+
+\subsubsection{Rationale}
+
+Bitcoin is the largest asset among cryptocurrencies, making up the majority of the market cap of the cryptocurrency market \citep{coinmarketcap2026}. The signal in this strategy sets BTC dominance as BTC's share of aggregate notional trading volume across cryptocurrencies. During regimes of fear and uncertainty this dominance tends to spike as crypto investors de risk into the most liquid crypto asset. The mean reversion strategy buys a basket of altcoins, anticipating a rotation back into these assets as the regime shifts.
+
+\subsubsection{Signal Construction}
+
+The signal is built from a notional dominance ratio $D_t = \frac{\mathrm{notional}^{\mathrm{BTC}}_t}{\sum_j \mathrm{notional}^{j}_t}$. The notional is defined as close price times volume for each asset.
+
+The first indicator for the strategy is a 20 day z-score of the dominance level:
+
+\begin{equation}
+    z_t^{\mathrm{dom}} = \frac{D_t - \bar{D}_t^{(20)}}{\hat{\sigma}_{D,t}^{(20)}}.
+\end{equation}
+
+The second indicator is a 3 day rate of change of dominance $ROC_t=D_t-D_{t-3}$ which serves as a way to prevent the strategy getting caught in long-term market shifts.
+
+Entry to the strategy happens when both of these metrics exceed their 80th and 95th 126 day rolling percentile respectively. The position exits when the dominance score drops to zero or a holding period of 7 days passes. I did experiment with a crash filter however the Optuna search consistently favoured the no filter configuration.
+
+\subsubsection{Parameter Selection}
+
+The signal parameters were tuned using Bayesian hyperparameter optimisation using Optuna's Tree structured Parzen Estimator (TPE) sampler with 80 trials. The search space covers: entry percentile, exit z-score, maximum holding period, ROC percentile, crash threshold and gross utilisation.
+
+The walk forward scoring function is:
+
+\begin{equation}
+  score = \bar{S}_{val} - 0.15\cdot std(S_{val})-P_{inactivity}
+\end{equation}
+
+
+
+
+% =============================================================================
+% SECTION 3 — Transaction Costs [10 points]
+% =============================================================================
+\section{Transaction Costs}
+
+For transaction costs, I use the Abdi--Ranaldo high low spread estimator \citep{AbdiRanaldo2017}. This estimator exploits the entire information content of OHLC bars. This provides an effective and stable measure for my daily frequency strategies.
+
+The estimator is:
+
+\begin{equation}
+  \hat{s}_t^{2} = 4\left(\ln c_{t-1} - m_{t-1}\right)\left(\ln c_t - m_t\right)
+\end{equation}
+
+where $c_t$ is the closing price and $m_t = (\ln h_t + \ln l_t)/2$ is the log midpoint. This is smoothed via a 21-day rolling mean to compute $\hat{s}_t = \sqrt{\left|\hat{s}_t^{2}\right|}$. These costs are applied at each bar. I chose this estimator as it remains well defined given all market conditions.
+
+\subsection{Cost Sensitivity}
+
+The cost-sensitivity analysis shows that Strategy 1 is much more resilient to trading costs than Strategy 2. Even when the estimated half spread is tripled, Strategy 1 still maintains a positive net Sharpe ratio and performance only weakening gradually. Strategy 2 is much more vulnerable. Its Sharpe falls quickly as costs rise and turns negative when the half spread is doubled. This fits the way the strategies are built since Strategy 1 trades less often and with lower turnover, while Strategy 2 uses a levered basket of altcoins where wider spreads and repeated rebalancing make slippage much more damaging.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/transaction_cost_sensitivity.png}
+    \caption{Transaction Cost Sensitivity Analysis}
+    \label{fig:costs}
+\end{figure}
+
+
+
+
+\section{Performance}
+
+Strategy 1 keeps total exposure fixed at \$10,000 throughout the backtest, regardless of portfolio gains or losses. This maintains stable daily dollar risk, although effective leverage relative to portfolio value changes over time. This means that the maximum one-day profit or loss is bounded by fixed exposure multiplied by the largest absolute asset return on that day.
+
+Strategy 2 is designed to trade at a target exposure of \$20,000. In normal conditions, that is the amount the strategy puts to work. The \$100,000 gross exposure limit is a set constraint, while the $10 \times V_t$ term acts as a safety check so the strategy never takes on more than 10 times its current equity. In practice, this means the strategy usually trades with a fixed \$20,000 exposure, but if the portfolio value falls far enough, the position size is automatically reduced to avoid excessive leverage.
+
+\subsection{Metrics}
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.95}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Strategy 1} & \multicolumn{2}{c}{Strategy 2} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+Metric & IS & OOS & IS & OOS \\
+\midrule
+Sharpe Ratio              & 0.923  & 1.300  & 0.343  & -2.912 \\
+Sortino Ratio             & 1.151  & 1.838  & 0.197  & -1.377 \\
+Calmar Ratio              & 0.825  & 3.324  & 0.105  & -1.927 \\
+Ann. Return (\%)          & 18.38  & 12.56  & 6.30   & -14.0  \\
+Max Drawdown (\%)         & -22.3  & -3.8   & -59.9  & -7.3   \\
+Total Net PnL (\$)        & +31,903 & +2,431 & +6,818 & -1,222 \\
+Gross PnL (\$)            & +42,332 & +2,511 & +30,866 & -596 \\
+Total Turnover (\$)       & 1,253,508 & 13,503 & 2,260,369 & 80,079 \\
+Return on $V_0$ (\%)      & 319.0  & 24.3   & 68.2   & -12.2  \\
+Active Days (\%)          & 93.5   & 100.0  & 9.0    & 2.4    \\
+Avg.\ Holding Period (days) & 10 & 10 & 3.6 & 1.5 \\
+\bottomrule
+\end{tabular}
+\caption{Performance metrics for both strategies (net of costs). All ratios are annualised. Strategy 1 holdout start equity: \$41{,}903. Strategy 2 is tuned with $u = 2.0$ (\$20{,}000 gross).}
+\label{tab:strategy_performance_combined}
+\end{table}
+
+Both strategies deliver positive risk-adjusted returns over the development sample, although both underperform BTC buy-and-hold in total return. Their main advantage is improved downside control. Strategy 1 achieves a maximum drawdown of $-22.3\%$, less than one-third of BTC buy-and-hold's $-76.6\%$, while its Sortino ratio of 1.151 is essentially in line with the benchmark's 1.146. This suggests that the trend-following signal captures a meaningful share of upside while avoiding much of the benchmark's extreme downside exposure. Strategy 2 also produces positive in-sample performance, but its drawdown of $-59.9\%$ remains high for a mean-reversion strategy, largely because the selected specification uses $2\times$ leverage. Trading costs are modest for Strategy 1 because of its low utilisation and infrequent rebalancing, whereas Strategy 2 is structurally more expensive due to its leveraged basket construction and the wider spreads of mid-cap altcoins.
+
+The holdout period further strengthens the case for Strategy 1. It records a Sharpe ratio of 1.30 with a shallow maximum drawdown of only $-3.8\%$, while BTC buy-and-hold over the same window returns $-26.2\%$ with a Sharpe of $-1.16$. The exposure breakdown shows that BTC accounted for the vast majority of gross exposure during this period, indicating that the walk-forward framework successfully concentrated risk in the asset with the strongest persistent trend. Both lost money, as the expected altcoin rebound did not materialise, but such a small sample is not sufficient to determine whether the strategy has genuinely broken down or whether the result simply reflects an unfavourable regime with too few qualifying BTC-dominance spikes.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/cumulative_returns.png}
+    \caption{Strategy 1 and 2 cumulative return net of costs}
+    \label{fig:returns}
+\end{figure}
+
+
+
+\section{Next Steps}
+Both strategies are strongly regime dependent, so the most important next step is to make this dependence explicit in the allocation process. Strategy 1 is likely to perform best during sustained directional markets and struggle in choppy, range bound conditions, while Strategy 2 is only attractive during short lived BTC-dominance spikes followed by rotation back into altcoins. This suggests that a regime filter based on realised volatility or trend persistence could be used to scale exposure up or down, or disable a strategy entirely in unfavourable conditions.
+
+The main robustness concern for Strategy 1 is that its good holdout result is heavily concentrated in BTC, so expanding the asset universe would improve diversification and reduce dependence on a single trend. For Strategy 2, the key issue is not just weaker holdout performance but the fact that only two OOS trades occurred, making reliable evaluation difficult. This highlights the need for a longer test window and a more conservative risk-budgeting rule for leverage rather than selecting utilisation purely on in-sample Sharpe. A combined capital-allocation framework that dynamically splits capital between the two strategies would likely improve overall portfolio efficiency by exploiting their different activity profiles and market sensitivities.
+
+\nocite{*}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

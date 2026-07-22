@@ -1,11 +1,16 @@
-# Dependencies for `src/` — pip install -r requirements.txt
+# Core research environment
 ccxt
+cvxpy
 fredapi
+ipython
+jupyterlab
 kaleido
+matplotlib
 numpy
 optuna
 pandas
 plotly
 pyarrow
 python-dotenv
+scikit-learn
 statsmodels
