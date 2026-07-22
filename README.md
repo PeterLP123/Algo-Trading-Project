@@ -31,6 +31,20 @@ The sample contains 2,271 daily observations from 1 January 2020 to 20 March 202
 
 Strategy 1 retained positive holdout performance and shallow drawdown, although its holdout exposure was heavily concentrated in BTC. Strategy 2 failed its holdout: only two out-of-sample trades occurred, so the negative result is both economically important and statistically weak. The repository preserves that result rather than retuning after seeing the holdout.
 
+## Frozen forward validation
+
+Strategy 1 is now monitored after the original 20 March 2026 cutoff using its selected parameters exactly as reported—no new search, tuning, or fallback selection is allowed. The forward runner verifies a hashed specification, requires the canonical pre-cutoff histories to remain unchanged, fetches only later completed Binance daily candles, and preserves the original signal, covariance, rebalance, position, and transaction-cost state.
+
+```bash
+python forward_validation.py
+```
+
+See [`forward_validation/README.md`](forward_validation/README.md) for the freeze contract, dated-snapshot workflow, and artifact schema. New results are explicitly labelled forward validation and do not replace the original holdout.
+
+The first immutable snapshot, covering 123 completed days through 21 July 2026, recorded a **3.98% net return**, **1.053 Sharpe**, **−5.15% maximum drawdown**, and **+1,468 USDT net PnL** while BTC buy-and-hold returned −5.61%. See the [dated snapshot](forward_validation/snapshots/2026-07-21/README.md) and its machine-readable daily accounting. The window remains too short to establish durable out-of-sample performance.
+
+![Frozen Strategy 1 forward performance](forward_validation/snapshots/2026-07-21/cumulative_returns.png)
+
 ## Methodology
 
 1. Download daily Binance OHLCV data with `ccxt` and audit candle integrity.
@@ -53,7 +67,12 @@ Strategy 1 retained positive holdout performance and shallow drawdown, although 
 │   ├── references.bib
 │   └── figures/                     # curated report and README figures
 ├── tests/
-│   └── test_pipelines.py            # deterministic pipeline smoke tests
+│   ├── test_pipelines.py            # deterministic pipeline smoke tests
+│   └── test_forward_validation.py   # freeze-boundary and no-retuning checks
+├── forward_validation/
+│   ├── frozen_strategy1.json        # hashed selected specification
+│   └── README.md                    # forward-test protocol and commands
+├── forward_validation.py            # post-2026-03-20 Strategy 1 runner
 ├── strategy_helpers.py              # data quality and shared utilities
 ├── wf_trend_pipeline.py             # Strategy 1 implementation
 ├── strategy2_pipeline.py            # Strategy 2 implementation
