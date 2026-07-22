@@ -24,7 +24,7 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
 
       - name: Compile Python sources
-        run: python -m compileall -q strategy_helpers.py strategy2_pipeline.py wf_trend_pipeline.py recompute_gross_turnover.py
+        run: python -m compileall -q strategy_helpers.py strategy2_pipeline.py wf_trend_pipeline.py recompute_gross_turnover.py forward_validation.py
 
       - name: Run tests
         run: python -m pytest -q

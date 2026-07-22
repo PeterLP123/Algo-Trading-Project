@@ -1,0 +1,37 @@
+{
+  "name": "strategy_1_walk_forward_selected",
+  "frozen_at": "2026-03-20",
+  "selection_source": "notebooks/strategy_analysis.ipynb",
+  "symbols": [
+    "BTC/USDT",
+    "ETH/USDT",
+    "BNB/USDT",
+    "ADA/USDT"
+  ],
+  "timeframe": "1d",
+  "frozen_history_sha256": {
+    "BTCUSDT_1d_cleaned.parquet": "d4b09f630191bd399955a165ac3c3bec938b7951a2f514f6e780eae9cc783cac",
+    "ETHUSDT_1d_cleaned.parquet": "e92b17a8502f22182d240087cfb5d1b60355b9c7bd381e95354f8e09c9152b8a",
+    "BNBUSDT_1d_cleaned.parquet": "416629ab25306e325af68aae4504ad146ff00b5ee6a2731209187de2dddcb531",
+    "ADAUSDT_1d_cleaned.parquet": "42df444a5a9d9e27e8f6c4c891ff3a33eefdf46835d07ab0ced5167f81594187"
+  },
+  "parameters": {
+    "ma_window": 140,
+    "vol_window": 30,
+    "dead_zone": 1.0,
+    "signal_clip": 5.0,
+    "gross_cap": 10000.0,
+    "rebalance_every": 10,
+    "use_mvo": true,
+    "cov_window": 120,
+    "gamma": 1.0
+  },
+  "execution": {
+    "initial_capital": 10000.0,
+    "spread_estimator": "Abdi-Ranaldo",
+    "spread_window": 21,
+    "lag_spread_one_bar": true,
+    "signal_execution_lag_bars": 1,
+    "trading_days_per_year": 252
+  }
+}
