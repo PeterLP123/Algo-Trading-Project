@@ -8,7 +8,11 @@ A cost-aware empirical comparison of two systematic cryptocurrency strategies: m
 
 [Read the final report](report/final_report.pdf) · [Explore the research notebook](notebooks/strategy_analysis.ipynb)
 
-![Full-sample cumulative returns for both strategies](report/figures/cumulative_returns.png)
+![Original backtest and frozen Strategy 1 forward validation](report/figures/readme_performance_overview.png)
+
+The historical panel retains the submitted development and holdout results. The forward panel is
+separately rebased at the frozen 20 March 2026 cutoff, so the new evidence is not mixed into the
+original model-selection sample.
 
 ## Research question
 
@@ -43,8 +47,6 @@ See [`forward_validation/README.md`](forward_validation/README.md) for the freez
 
 The first immutable snapshot, covering 123 completed days through 21 July 2026, recorded a **3.98% net return**, **1.053 Sharpe**, **−5.15% maximum drawdown**, and **+1,468 USDT net PnL** while BTC buy-and-hold returned −5.61%. See the [dated snapshot](forward_validation/snapshots/2026-07-21/README.md) and its machine-readable daily accounting. The window remains too short to establish durable out-of-sample performance.
 
-![Frozen Strategy 1 forward performance](forward_validation/snapshots/2026-07-21/cumulative_returns.png)
-
 ## Methodology
 
 1. Download daily Binance OHLCV data with `ccxt` and audit candle integrity.
@@ -62,6 +64,7 @@ The first immutable snapshot, covering 123 completed days through 21 July 2026, 
 ├── notebooks/
 │   └── strategy_analysis.ipynb      # complete research workflow and saved outputs
 ├── report/
+│   ├── build_readme_performance_figure.py # reproducible README overview
 │   ├── final_report.pdf             # compiled six-page report
 │   ├── final_report.tex             # report source
 │   ├── references.bib
@@ -115,6 +118,12 @@ Run the deterministic checks without downloading market data:
 ```bash
 python -m pip install -r requirements-dev.txt
 python -m pytest -q
+```
+
+Rebuild the README performance overview from the committed historical figure and frozen snapshot:
+
+```bash
+python report/build_readme_performance_figure.py
 ```
 
 Build the report with a TeX Live installation:
