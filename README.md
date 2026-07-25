@@ -3,10 +3,19 @@
 [![CI](https://github.com/PeterLP123/systematic-crypto-research/actions/workflows/ci.yml/badge.svg)](https://github.com/PeterLP123/systematic-crypto-research/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Jupyter](https://img.shields.io/badge/Jupyter-research-F37626?logo=jupyter&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/Code%20license-MIT-2ea44f.svg)](LICENSE)
 
 A cost-aware empirical comparison of two systematic cryptocurrency strategies: multi-asset trend following and BTC-dominance mean reversion. The project uses walk-forward model selection, an untouched holdout, realistic turnover accounting, and the Abdi-Ranaldo spread estimator.
 
 [Read the final report](report/final_report.pdf) · [Explore the research notebook](notebooks/strategy_analysis.ipynb)
+
+## Portfolio takeaway
+
+This repository demonstrates an end-to-end quantitative research workflow: audited market data,
+leakage-aware model selection, reusable Python backtest pipelines, realistic cost accounting,
+deterministic tests, and parameter-frozen forward monitoring. The result is deliberately
+asymmetric: trend following held up in the original holdout and first forward window, while
+BTC-dominance mean reversion failed; the failed strategy is preserved rather than retuned.
 
 ![Original backtest extended with frozen Strategy 1 and Strategy 2 forward validation](report/figures/readme_performance_overview.png)
 
@@ -58,6 +67,17 @@ The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 
 6. Apply lagged Abdi-Ranaldo half-spread estimates to traded notional.
 7. Report gross and net PnL, turnover, drawdown, activity, and holdout performance.
 
+## Research engineering
+
+- **20 deterministic tests** cover time alignment, transaction costs, signal construction,
+  immutable strategy specifications, cutoff boundaries, and snapshot self-consistency.
+- **Continuous integration** compiles every research module and runs the complete offline test
+  suite on each push and pull request.
+- **Frozen specifications** are hash-verified, expose no tuning overrides, and reject modified
+  pre-cutoff histories or incomplete candles.
+- **Immutable evidence** is published as dated, non-overwritable snapshots with daily accounting,
+  machine-readable summaries, and reproducible figures.
+
 ## Repository structure
 
 ```text
@@ -68,6 +88,7 @@ The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 
 │   ├── build_readme_performance_figure.py # reproducible README overview
 │   ├── final_report.pdf             # compiled six-page report
 │   ├── final_report.tex             # report source
+│   ├── LICENSE.md                    # rights for research materials
 │   ├── references.bib
 │   └── figures/                     # curated report and README figures
 ├── tests/
@@ -123,7 +144,8 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Rebuild the README performance overview from the committed historical figure and frozen snapshot:
+Rebuild the README performance overview and GitHub social preview from the committed historical
+figure and frozen snapshot:
 
 ```bash
 python report/build_readme_performance_figure.py
@@ -150,6 +172,12 @@ The full notebook is substantially slower and requires either the local caches o
 ## Report and citation
 
 The final UCL COMP0051 report is available as both [PDF](report/final_report.pdf) and [LaTeX source](report/final_report.tex). Citation metadata is provided in [`CITATION.cff`](CITATION.cff).
+
+## Licensing
+
+The software source code is available under the [MIT License](LICENSE). The written report,
+notebook narrative, figures, and published research outputs are provided for viewing and citation
+but are not covered by the software licence; see [`report/LICENSE.md`](report/LICENSE.md).
 
 ## Disclaimer
 
