@@ -69,10 +69,12 @@ The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 
 
 ## Research engineering
 
-- **20 deterministic tests** cover time alignment, transaction costs, signal construction,
+- **22 deterministic tests** cover time alignment, transaction costs, signal construction,
   immutable strategy specifications, cutoff boundaries, and snapshot self-consistency.
 - **Continuous integration** compiles every research module and runs the complete offline test
   suite on each push and pull request.
+- **Modular research architecture** separates data validation, signal construction, execution,
+  transaction costs, and evaluation behind stable public imports.
 - **Frozen specifications** are hash-verified, expose no tuning overrides, and reject modified
   pre-cutoff histories or incomplete candles.
 - **Immutable evidence** is published as dated, non-overwritable snapshots with daily accounting,
@@ -91,16 +93,23 @@ The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 
 │   ├── LICENSE.md                    # rights for research materials
 │   ├── references.bib
 │   └── figures/                     # curated report and README figures
+├── systematic_crypto/
+│   ├── data.py                       # market-data storage, normalization, and audits
+│   ├── signals.py                    # signals, regime filters, and target weights
+│   ├── execution.py                  # execution engine and strategy orchestration
+│   ├── costs.py                      # spread estimation and cost sensitivity
+│   └── evaluation.py                 # diagnostics, metrics, sweeps, and walk-forward tests
 ├── tests/
 │   ├── test_pipelines.py            # deterministic pipeline smoke tests
-│   └── test_forward_validation.py   # freeze-boundary and no-retuning checks
+│   ├── test_forward_validation.py   # freeze-boundary and no-retuning checks
+│   └── test_module_boundaries.py    # package ownership and legacy-import compatibility
 ├── forward_validation/
 │   ├── frozen_strategy1.json        # hashed selected specification
 │   ├── frozen_strategy2.json        # hashed Strategy 2 specification
 │   └── README.md                    # forward-test protocol and commands
 ├── forward_validation.py            # post-2026-03-20 Strategy 1 runner
 ├── strategy2_forward_validation.py  # post-2026-03-20 Strategy 2 runner
-├── strategy_helpers.py              # data quality and shared utilities
+├── strategy_helpers.py              # compatibility facade for existing notebook imports
 ├── wf_trend_pipeline.py             # Strategy 1 implementation
 ├── strategy2_pipeline.py            # Strategy 2 implementation
 ├── recompute_gross_turnover.py      # independent PnL/turnover reconciliation
@@ -109,6 +118,11 @@ The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 
 ```
 
 Raw data, API credentials, Optuna databases, caches, and generated notebook output are intentionally excluded from Git.
+
+The package boundaries and allowed dependency direction are documented in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Existing imports from
+`strategy_helpers` remain supported, while new code should import from the focused
+`systematic_crypto` modules.
 
 ## Setup
 
