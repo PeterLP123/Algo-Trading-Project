@@ -22,7 +22,7 @@ except ImportError:
         return False
 
 from strategy2_pipeline import build_s2_features, make_s2_params, run_s2_strategy
-from strategy_helpers import audit_ohlcv, ensure_utc_index, read_parquet_safe, write_parquet_safe
+from systematic_crypto.data import audit_ohlcv, ensure_utc_index, read_parquet_safe, write_parquet_safe
 from wf_trend_pipeline import (
     build_signal_and_theta,
     compute_half_spread_frac,

@@ -14,7 +14,12 @@ Both strategies use Binance OHLCV data and an Abdi-Ranaldo transaction-cost prox
 ## Canonical files
 
 - `notebooks/strategy_analysis.ipynb` - end-to-end research notebook and saved results.
-- `strategy_helpers.py` - data, audit, and shared research utilities.
+- `systematic_crypto/data.py` - market-data normalization, storage, and OHLCV audits.
+- `systematic_crypto/signals.py` - signal, regime-filter, and target-weight construction.
+- `systematic_crypto/execution.py` - portfolio execution and strategy orchestration.
+- `systematic_crypto/costs.py` - spread estimation and cost-sensitivity analysis.
+- `systematic_crypto/evaluation.py` - diagnostics, performance summaries, sweeps, and walk-forward evaluation.
+- `strategy_helpers.py` - backward-compatible facade for the notebook's historical imports.
 - `wf_trend_pipeline.py` - Strategy 1 signal, sizing, backtest, and metrics.
 - `strategy2_pipeline.py` - Strategy 2 features, execution, and evaluation.
 - `recompute_gross_turnover.py` - reproducibility check for IS/OOS PnL and turnover.
@@ -39,7 +44,7 @@ Data, caches, Optuna databases, generated output, and `.env` are intentionally i
 
 ```bash
 python -m pytest -q
-python -m compileall -q strategy_helpers.py strategy2_pipeline.py wf_trend_pipeline.py recompute_gross_turnover.py
+python -m compileall -q strategy_helpers.py systematic_crypto strategy2_pipeline.py wf_trend_pipeline.py recompute_gross_turnover.py
 cd report && latexmk -pdf -interaction=nonstopmode -halt-on-error final_report.tex
 ```
 

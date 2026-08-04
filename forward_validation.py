@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from strategy_helpers import ensure_utc_index, read_parquet_safe, write_parquet_safe
+from systematic_crypto.data import ensure_utc_index, read_parquet_safe, write_parquet_safe
 from wf_trend_pipeline import (
     build_signal_and_theta,
     compute_half_spread_frac,

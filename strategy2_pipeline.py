@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from strategy_helpers import ensure_utc_index
+from systematic_crypto.data import ensure_utc_index
 from wf_trend_pipeline import calmar_ratio, max_drawdown, sharpe_ratio, sortino_ratio
 
 GROSS_CAP = 100_000.0
