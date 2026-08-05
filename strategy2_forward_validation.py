@@ -15,12 +15,14 @@ import pandas as pd
 
 from forward_validation import (
     FREEZE_CUTOFF,
+    ORIGINAL_HOLDOUT_START,
+    POST_SELECTION_ANCHOR,
     file_sha256,
     load_or_fetch_forward,
     resolve_end_date,
 )
 from strategy2_pipeline import build_s2_features, make_s2_params, run_s2_strategy
-from wf_trend_pipeline import compute_half_spread_frac, max_drawdown, sharpe_ratio
+from wf_trend_pipeline import compute_half_spread_frac, max_drawdown, sharpe_ratio, sortino_ratio
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -133,12 +135,10 @@ def build_combined_history(
     return combined, cache_hashes
 
 
-def evaluate_strategy2_forward(
+def build_frozen_strategy2_run(
     combined: dict[str, pd.DataFrame],
     spec: dict[str, Any],
-    *,
-    end_date: pd.Timestamp,
-) -> tuple[dict[str, Any], pd.DataFrame]:
+) -> dict[str, Any]:
     tickers = list(spec["symbols"])
     alt_tickers = [ticker for ticker in tickers if ticker != "BTC"]
     cleaned = {
@@ -166,7 +166,7 @@ def evaluate_strategy2_forward(
         parameters["crash_threshold"],
         gross_util=parameters["gross_util"],
     )
-    run = run_s2_strategy(
+    return run_s2_strategy(
         features,
         params,
         alt_tickers,
@@ -175,18 +175,46 @@ def evaluate_strategy2_forward(
         gross_util=parameters["gross_util"],
     )
 
-    forward_index = pd.date_range(FREEZE_CUTOFF + pd.Timedelta(days=1), end_date, freq="D")
-    anchor_equity = float(run["net_value"].loc[FREEZE_CUTOFF])
-    forward_equity = run["net_value"].reindex(forward_index)
+
+def evaluate_strategy2_window(
+    run: dict[str, Any],
+    *,
+    evaluation_index: pd.DatetimeIndex,
+    anchor_date: pd.Timestamp,
+    trading_days: int = 252,
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    if evaluation_index.empty or not (evaluation_index > anchor_date).all():
+        raise ValueError("Evaluation index must contain only dates after its equity anchor.")
+    expected_index = pd.date_range(evaluation_index.min(), evaluation_index.max(), freq="D")
+    if not evaluation_index.equals(expected_index):
+        raise ValueError("Strategy 2 evaluation index must be an uninterrupted daily window.")
+
+    end_date = evaluation_index.max()
+    anchor_equity = float(run["net_value"].loc[anchor_date])
+    if not np.isfinite(anchor_equity) or anchor_equity <= 0:
+        raise ValueError("Strategy 2 equity was non-positive at the evaluation boundary.")
+    forward_equity = run["net_value"].reindex(evaluation_index)
+    if forward_equity.isna().any():
+        raise ValueError("Strategy 2 run is missing equity observations in the evaluation window.")
     anchored_equity = pd.concat(
-        [pd.Series([anchor_equity], index=pd.DatetimeIndex([FREEZE_CUTOFF])), forward_equity]
+        [pd.Series([anchor_equity], index=pd.DatetimeIndex([anchor_date])), forward_equity]
     )
     returns = anchored_equity.pct_change().dropna()
-    gross = run["gross_pnl_daily"].reindex(forward_index).fillna(0.0)
-    costs = run["cost_pnl_daily"].reindex(forward_index).fillna(0.0)
+    gross = run["gross_pnl_daily"].reindex(evaluation_index).fillna(0.0)
+    costs = run["cost_pnl_daily"].reindex(evaluation_index).fillna(0.0)
     net = gross - costs
-    weights = run["weights"].reindex(forward_index).fillna(0.0)
-    entries = [entry for entry in run["trade_entries"] if FREEZE_CUTOFF < entry <= end_date]
+    weights = run["weights"].reindex(evaluation_index).fillna(0.0)
+    turnover = run["turnover"].reindex(evaluation_index).fillna(0.0)
+    gross_exposure = run["theta"].reindex(evaluation_index).abs().sum(axis=1)
+    active = weights.abs().sum(axis=1).gt(0)
+    entries = [entry for entry in run["trade_entries"] if anchor_date < entry <= end_date]
+    n_days = len(evaluation_index)
+    total_return = float(forward_equity.iloc[-1] / anchor_equity - 1.0)
+    annualised_return = (
+        float((1.0 + total_return) ** (trading_days / n_days) - 1.0)
+        if total_return > -1.0
+        else np.nan
+    )
 
     daily = pd.DataFrame(
         {
@@ -195,36 +223,65 @@ def evaluate_strategy2_forward(
             "net_pnl": net,
             "portfolio_value": forward_equity,
             "cumulative_return": forward_equity / anchor_equity - 1.0,
-            "turnover": run["turnover"].reindex(forward_index).fillna(0.0),
-            "gross_exposure": run["theta"].reindex(forward_index).abs().sum(axis=1),
-            "active": weights.sum(axis=1).gt(0),
+            "turnover": turnover,
+            "gross_exposure": gross_exposure,
+            "active": active,
         }
     )
     daily.index.name = "date"
     metrics = {
-        "start": str(forward_index.min().date()),
+        "start": str(evaluation_index.min().date()),
         "end": str(end_date.date()),
-        "n_days": len(forward_index),
-        "anchor_date": str(FREEZE_CUTOFF.date()),
+        "n_days": n_days,
+        "anchor_date": str(anchor_date.date()),
         "anchor_equity": anchor_equity,
         "final_equity": float(forward_equity.iloc[-1]),
-        "total_return": float(forward_equity.iloc[-1] / anchor_equity - 1.0),
-        "sharpe": float(sharpe_ratio(returns)),
+        "total_return": total_return,
+        "annualised_return": annualised_return,
+        "sharpe": float(sharpe_ratio(returns, trading_days)),
+        "sortino": float(sortino_ratio(returns, trading_days=trading_days)),
         "max_drawdown": float(max_drawdown(anchored_equity)),
         "total_gross_pnl": float(gross.sum()),
         "total_cost": float(costs.sum()),
         "total_net_pnl": float(net.sum()),
+        "total_turnover": float(turnover.sum()),
+        "mean_daily_turnover": float(turnover.mean()),
+        "mean_gross_exposure": float(gross_exposure.mean()),
+        "mean_active_gross_exposure": (
+            float(gross_exposure.loc[active].mean()) if active.any() else 0.0
+        ),
         "trade_entries": len(entries),
         "entry_dates": [str(entry.date()) for entry in entries],
         "active_days": int(daily["active"].sum()),
+        "active_days_pct": float(daily["active"].mean()),
     }
     return metrics, daily
+
+
+def evaluate_strategy2_forward(
+    combined: dict[str, pd.DataFrame],
+    spec: dict[str, Any],
+    *,
+    end_date: pd.Timestamp,
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    run = build_frozen_strategy2_run(combined, spec)
+    forward_index = pd.date_range(FREEZE_CUTOFF + pd.Timedelta(days=1), end_date, freq="D")
+    return evaluate_strategy2_window(
+        run,
+        evaluation_index=forward_index,
+        anchor_date=FREEZE_CUTOFF,
+        trading_days=int(spec["execution"]["trading_days_per_year"]),
+    )
 
 
 def validate_output_target(output_dir: Path) -> None:
     if "snapshots" not in output_dir.parts:
         return
-    protected = [output_dir / "strategy2_summary.json", output_dir / "strategy2_daily.csv"]
+    protected = [
+        output_dir / "strategy2_summary.json",
+        output_dir / "strategy2_daily.csv",
+        output_dir / "strategy2_post_selection_daily.csv",
+    ]
     if any(path.exists() for path in protected):
         raise FileExistsError(f"Strategy 2 snapshot already exists at {output_dir}.")
 
@@ -247,12 +304,29 @@ def run_forward_validation(
         cache_dir=cache_dir,
         offline=offline,
     )
-    metrics, daily = evaluate_strategy2_forward(combined, spec, end_date=end_date)
+    run = build_frozen_strategy2_run(combined, spec)
+    trading_days = int(spec["execution"]["trading_days_per_year"])
+    forward_index = pd.date_range(FREEZE_CUTOFF + pd.Timedelta(days=1), end_date, freq="D")
+    metrics, daily = evaluate_strategy2_window(
+        run,
+        evaluation_index=forward_index,
+        anchor_date=FREEZE_CUTOFF,
+        trading_days=trading_days,
+    )
+    post_selection_index = pd.date_range(ORIGINAL_HOLDOUT_START, end_date, freq="D")
+    post_selection_metrics, post_selection_daily = evaluate_strategy2_window(
+        run,
+        evaluation_index=post_selection_index,
+        anchor_date=POST_SELECTION_ANCHOR,
+        trading_days=trading_days,
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     daily_path = output_dir / "strategy2_daily.csv"
+    post_selection_daily_path = output_dir / "strategy2_post_selection_daily.csv"
     summary_path = output_dir / "strategy2_summary.json"
     daily.to_csv(daily_path, float_format="%.10g")
+    post_selection_daily.to_csv(post_selection_daily_path, float_format="%.10g")
     summary = {
         "status": "frozen_strategy2_forward_validation",
         "generated_at_utc": pd.Timestamp.now(tz="UTC").isoformat(),
@@ -263,7 +337,12 @@ def run_forward_validation(
         "frozen_spec": spec,
         "forward_cache_sha256": cache_hashes,
         "metrics": metrics,
-        "artifacts": {"daily": daily_path.name, "summary": summary_path.name},
+        "post_selection_metrics": post_selection_metrics,
+        "artifacts": {
+            "daily": daily_path.name,
+            "post_selection_daily": post_selection_daily_path.name,
+            "summary": summary_path.name,
+        },
     }
     summary_path.write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     return summary
@@ -295,6 +374,16 @@ def main() -> None:
     print(f"  Sharpe: {metrics['sharpe']:.3f}")
     print(f"  Max drawdown: {metrics['max_drawdown']:.2%}")
     print(f"  Net PnL: {metrics['total_net_pnl']:.2f} USDT")
+    post_selection = summary["post_selection_metrics"]
+    print("Continuous post-selection evidence")
+    print(
+        f"  Window: {post_selection['start']} to {post_selection['end']} "
+        f"({post_selection['n_days']} days)"
+    )
+    print(f"  Net return: {post_selection['total_return']:.2%}")
+    print(f"  Sharpe: {post_selection['sharpe']:.3f}")
+    print(f"  Max drawdown: {post_selection['max_drawdown']:.2%}")
+    print(f"  Net PnL: {post_selection['total_net_pnl']:.2f} USDT")
 
 
 if __name__ == "__main__":

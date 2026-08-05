@@ -167,6 +167,39 @@ def test_forward_metrics_use_cutoff_equity_as_the_return_anchor() -> None:
     assert daily.index.min() > fv.FREEZE_CUTOFF
 
 
+def test_post_selection_metrics_use_pre_holdout_equity_anchor() -> None:
+    index = pd.date_range(fv.POST_SELECTION_ANCHOR, periods=3, freq="D")
+    symbols = ["BTC/USDT", "ETH/USDT"]
+    close_values = pd.DataFrame(
+        {"BTC/USDT": [100.0, 101.0, 102.0], "ETH/USDT": [50.0, 51.0, 52.0]},
+        index=index,
+    )
+    asset_panel = pd.concat({"close": close_values}, axis=1)
+    exposure = pd.DataFrame(1_000.0, index=index, columns=symbols)
+    run_state = {
+        "net_portfolio_value": pd.Series([10_000.0, 10_100.0, 10_201.0], index=index),
+        "gross_pnl": pd.Series([0.0, 100.0, 101.0], index=index),
+        "net_pnl": pd.Series([0.0, 100.0, 101.0], index=index),
+        "cost_t": pd.Series(0.0, index=index),
+        "turnover": pd.Series([0.0, 2_000.0, 0.0], index=index),
+        "theta_exec": exposure,
+        "delta_theta_exec": pd.DataFrame(0.0, index=index, columns=symbols),
+        "r": close_values.pct_change().fillna(0.0),
+    }
+
+    metrics, daily = fv.evaluate_post_selection_window(
+        run_state,
+        asset_panel,
+        post_selection_index=index[index >= fv.ORIGINAL_HOLDOUT_START],
+    )
+
+    assert metrics["anchor_date"] == "2025-11-14"
+    assert metrics["total_return"] == pytest.approx(0.0201)
+    assert metrics["total_turnover"] == pytest.approx(2_000.0)
+    assert metrics["mean_gross_exposure"] == pytest.approx(2_000.0)
+    assert daily.index.min() == fv.ORIGINAL_HOLDOUT_START
+
+
 def test_dated_snapshots_cannot_be_overwritten(tmp_path: Path) -> None:
     snapshot = tmp_path / "forward_validation" / "snapshots" / "2026-07-21"
     snapshot.mkdir(parents=True)
@@ -204,3 +237,24 @@ def test_corrected_snapshot_uses_submitted_rebalance_phase() -> None:
     assert metrics["anchor_equity"] == pytest.approx(44_433.78553769693)
     assert metrics["total_return"] == pytest.approx(0.03521834072482588)
     assert daily["net_pnl"].sum() == pytest.approx(metrics["total_net_pnl"], rel=1e-9)
+
+
+def test_latest_snapshot_includes_continuous_post_selection_evidence() -> None:
+    snapshot = Path("forward_validation/snapshots/2026-08-04")
+    summary = json.loads((snapshot / "summary.json").read_text(encoding="utf-8"))
+    forward = pd.read_csv(snapshot / "daily.csv", parse_dates=["date"])
+    combined = pd.read_csv(snapshot / "post_selection_daily.csv", parse_dates=["date"])
+    forward_metrics = summary["metrics"]
+    combined_metrics = summary["post_selection_metrics"]
+
+    assert len(forward) == forward_metrics["n_days"] == 137
+    assert len(combined) == combined_metrics["n_days"] == 263
+    assert combined["date"].min() == fv.ORIGINAL_HOLDOUT_START
+    assert combined["date"].max() == pd.Timestamp("2026-08-04", tz="UTC")
+    assert combined["net_pnl"].sum() == pytest.approx(
+        combined_metrics["total_net_pnl"], rel=1e-9
+    )
+    assert combined.iloc[-1]["cumulative_return"] == pytest.approx(
+        combined_metrics["total_return"], rel=1e-9
+    )
+    assert (snapshot / summary["artifacts"]["post_selection_figure"]).stat().st_size > 0

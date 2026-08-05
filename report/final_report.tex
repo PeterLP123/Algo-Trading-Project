@@ -11,6 +11,7 @@
 \usepackage{setspace}
 \usepackage{parskip}
 \usepackage{caption}
+\usepackage{placeins}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
 \usepackage{titling}
@@ -77,7 +78,7 @@
 \title{Walk Forward Trend Following and BTC Dominance Mean Reversion
 in Cryptocurrency Markets}
 \author{Peter Prendergast | Student ID: 25217979\\ University College London}
-\date{April 2026}
+\date{April 2026; evidence updated August 2026}
 
 \begin{document}
 \maketitle
@@ -152,7 +153,7 @@ with $\gamma = 1$, where $\mu$ is proxied by the volatility scaled signal and $\
 
 \subsubsection{Parameter Selection}
 
-The parameters for the strategy were selected using a walk forward validation procedure. An untouched test window of 126 bars (\textasciitilde6 months) was kept for out of sample testing. This process used folds of 600 bars and a validation window of 100 bars, advancing by 100 bars per fold. This yielded 15 walk-forward folds of which every second were evaluated.
+The parameters for the strategy were selected using a walk forward validation procedure. An untouched test window of 126 consecutive daily observations (about 4.1 calendar months in a market that trades seven days per week) was kept for out of sample testing. This process used folds of 600 bars and a validation window of 100 bars, advancing by 100 bars per fold. This yielded 15 walk-forward folds of which every second were evaluated.
 
 The search grid used the following parameters: moving-average window $w$, volatility window $w_{\mathrm{vol}}$, dead-zone threshold $\delta$, rebalancing frequency $n$, and gross utilisation $u$. The signal clip was fixed at $\pm 5$, and the gross cap at $\$100{,}000$.
 
@@ -261,28 +262,58 @@ Active Days (\%)          & 93.5   & 100.0  & 9.0    & 2.4    \\
 Avg.\ Holding Period (days) & 10 & 10 & 3.6 & 1.5 \\
 \bottomrule
 \end{tabular}
-\caption{Performance metrics for both strategies (net of costs). All ratios are annualised. Strategy 1 holdout start equity: \$41{,}903. Strategy 2 is tuned with $u = 2.0$ (\$20{,}000 gross).}
+\caption{Original submitted performance metrics for both strategies (net of costs). Ratios use the project's 252-observation annualisation convention. Strategy 1 holdout start equity: \$41{,}903. Strategy 2 is tuned with $u = 2.0$ (\$20{,}000 gross).}
 \label{tab:strategy_performance_combined}
 \end{table}
 
 Both strategies deliver positive risk-adjusted returns over the development sample, although both underperform BTC buy-and-hold in total return. Their main advantage is improved downside control. Strategy 1 achieves a maximum drawdown of $-22.3\%$, less than one-third of BTC buy-and-hold's $-76.6\%$, while its Sortino ratio of 1.151 is essentially in line with the benchmark's 1.146. This suggests that the trend-following signal captures a meaningful share of upside while avoiding much of the benchmark's extreme downside exposure. Strategy 2 also produces positive in-sample performance, but its drawdown of $-59.9\%$ remains high for a mean-reversion strategy, largely because the selected specification uses $2\times$ leverage. Trading costs are modest for Strategy 1 because of its low utilisation and infrequent rebalancing, whereas Strategy 2 is structurally more expensive due to its leveraged basket construction and the wider spreads of mid-cap altcoins.
 
-The holdout period further strengthens the case for Strategy 1. It records a Sharpe ratio of 1.30 with a shallow maximum drawdown of only $-3.8\%$, while BTC buy-and-hold over the same window returns $-26.2\%$ with a Sharpe of $-1.16$. The exposure breakdown shows that BTC accounted for the vast majority of gross exposure during this period, indicating that the walk-forward framework successfully concentrated risk in the asset with the strongest persistent trend. Both lost money, as the expected altcoin rebound did not materialise, but such a small sample is not sufficient to determine whether the strategy has genuinely broken down or whether the result simply reflects an unfavourable regime with too few qualifying BTC-dominance spikes.
+The original holdout strengthens the case for Strategy 1. It records a Sharpe ratio of 1.30 with a shallow maximum drawdown of only $-3.8\%$, while BTC buy-and-hold over the same window returns $-26.2\%$ with a Sharpe of $-1.16$. The exposure breakdown shows that BTC accounted for the vast majority of gross exposure during this period. Strategy 2 instead lost money as the expected altcoin rebound did not materialise. Its two qualifying holdout trades are too few for a precise performance estimate, but the negative economic result is retained without retuning.
+
+\subsection{Continuous Post-Selection Evidence}
+
+Both frozen specifications were subsequently run through 4 August 2026. Covering the dates of the original 126-observation holdout and 137 completed post-freeze daily observations gives one uninterrupted 263-observation period from 15 November 2025. The metrics are recomputed from one stateful run of the hashed frozen evidence pipeline, not by adding rounded values from the submitted table. This longer window does not replace the original holdout: because its first segment was already observed when the strategies were frozen, it is explicitly treated as post-selection evidence.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{7pt}
+\renewcommand{\arraystretch}{0.95}
+\begin{tabular}{lrr}
+\toprule
+Metric & Strategy 1 & Strategy 2 \\
+\midrule
+Net Return (\%)          & +10.06 & -19.44 \\
+Annualised Return (\%)   & +9.62  & -18.71 \\
+Sharpe Ratio              & 1.192  & -2.231 \\
+Maximum Drawdown (\%)    & -4.96  & -19.44 \\
+Gross PnL (\$)            & +4,563 & -1,365 \\
+Transaction Costs (\$)    & -336   & -1,782 \\
+Net PnL (\$)              & +4,227 & -3,147 \\
+Total Turnover (\$)       & 90,823 & 282,099 \\
+Mean Gross Exposure (\$)  & 9,953  & 1,065 \\
+Activity                   & 100.0\% of days & 7 entries / 14 days \\
+\bottomrule
+\end{tabular}
+\caption{Continuous post-selection results from 15 November 2025 to 4 August 2026, net of estimated costs. Annualised figures use 252 observations per year for comparability with the submitted analysis.}
+\label{tab:post_selection_performance}
+\end{table}
+
+Strategy 1 returned $10.06\%$ with a Sharpe ratio of 1.192 and a $-4.96\%$ maximum drawdown, while BTC buy-and-hold and the equal-weight four-asset basket returned $-32.23\%$ and $-42.29\%$, respectively. The result remains concentrated: mean absolute BTC exposure was \$7,718 of \$9,953 mean gross exposure. Strategy 2 returned $-19.44\%$ and lost \$1,365 before \$1,782 of estimated costs. Its mean exposure across all observations is low because it was active for only 14 days; when active, gross exposure remained approximately \$20,000.
 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.95\textwidth]{figures/cumulative_returns.png}
-    \caption{Strategy 1 and 2 cumulative return net of costs}
+    \includegraphics[width=0.85\textwidth]{figures/readme_performance_overview.png}
+    \caption{Submitted cumulative-return paths extended through 137 post-freeze observations. Shading separates development, original holdout, and frozen-forward evidence.}
     \label{fig:returns}
 \end{figure}
 
-
+\FloatBarrier
+\thispagestyle{fancy}
 
 \section{Next Steps}
-Both strategies are strongly regime dependent, so the most important next step is to make this dependence explicit in the allocation process. Strategy 1 is likely to perform best during sustained directional markets and struggle in choppy, range bound conditions, while Strategy 2 is only attractive during short lived BTC-dominance spikes followed by rotation back into altcoins. This suggests that a regime filter based on realised volatility or trend persistence could be used to scale exposure up or down, or disable a strategy entirely in unfavourable conditions.
-
-The main robustness concern for Strategy 1 is that its good holdout result is heavily concentrated in BTC, so expanding the asset universe would improve diversification and reduce dependence on a single trend. For Strategy 2, the key issue is not just weaker holdout performance but the fact that only two OOS trades occurred, making reliable evaluation difficult. This highlights the need for a longer test window and a more conservative risk-budgeting rule for leverage rather than selecting utilisation purely on in-sample Sharpe. A combined capital-allocation framework that dynamically splits capital between the two strategies would likely improve overall portfolio efficiency by exploiting their different activity profiles and market sensitivities.
+Both strategies remain regime dependent. Strategy 1's positive result is heavily concentrated in BTC, so a pre-specified expansion of the asset universe could improve diversification. The 263-observation post-selection period improves on the original short holdout but covers only about 8.6 calendar months, while Strategy 2 generated just seven entries and remained clearly negative. Further research should therefore extend frozen monitoring rather than retune the failed specification. Any regime filter, more conservative leverage rule, or combined capital-allocation framework should be fixed before additional observations arrive and evaluated as a separate experiment.
 
 \nocite{*}
 \bibliographystyle{plainnat}

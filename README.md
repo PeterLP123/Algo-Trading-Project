@@ -14,7 +14,7 @@ A cost-aware empirical comparison of two systematic cryptocurrency strategies: m
 This repository demonstrates an end-to-end quantitative research workflow: audited market data,
 leakage-aware model selection, reusable Python backtest pipelines, realistic cost accounting,
 deterministic tests, and parameter-frozen forward monitoring. The result is deliberately
-asymmetric: trend following held up in the original holdout and first forward window, while
+asymmetric: trend following held up through 263 continuous post-selection observations, while
 BTC-dominance mean reversion failed; the failed strategy is preserved rather than retuned.
 
 ![Original backtest extended with frozen Strategy 1 and Strategy 2 forward validation](report/figures/readme_performance_overview.png)
@@ -32,7 +32,7 @@ Can two economically distinct crypto signals retain useful risk-adjusted perform
 
 The raw sample contains 2,271 daily candles from 1 January 2020 to 20 March 2026; the return-aligned strategy panel begins on 2 January. Strategy parameters are selected before evaluating the final 126 daily observations.
 
-## Main results
+## Original submitted results
 
 | Metric | Strategy 1 IS | Strategy 1 OOS | Strategy 2 IS | Strategy 2 OOS |
 |---|---:|---:|---:|---:|
@@ -43,6 +43,25 @@ The raw sample contains 2,271 daily candles from 1 January 2020 to 20 March 2026
 | Active days | 93.5% | **100.0%** | 9.0% | **2.4%** |
 
 Strategy 1 retained positive holdout performance and shallow drawdown, although its holdout exposure was heavily concentrated in BTC. Strategy 2 failed its holdout: only two out-of-sample trades occurred, so the negative result is both economically important and statistically weak. The repository preserves that result rather than retuning after seeing the holdout.
+
+## Continuous post-selection evidence
+
+The latest frozen-strategy snapshot covers the original 126-observation holdout dates and the 137 later observations, producing one uninterrupted **263-day** evaluation from 15 November 2025 through 4 August 2026. This is a longer post-selection view—not a replacement for the originally reported holdout and not a new untouched test. Its metrics come from one stateful run of the hashed frozen evidence pipeline, rather than from adding the rounded submitted table to the forward table.
+
+| Metric | Strategy 1 | Strategy 2 |
+|---|---:|---:|
+| Net return | **+10.06%** | **−19.44%** |
+| Annualised return | +9.62% | −18.71% |
+| Sharpe ratio | **1.192** | **−2.231** |
+| Maximum drawdown | **−4.96%** | **−19.44%** |
+| Gross PnL | +4,563 USDT | −1,365 USDT |
+| Transaction costs | −336 USDT | −1,782 USDT |
+| Net PnL | **+4,227 USDT** | **−3,147 USDT** |
+| Total turnover | 90,823 USDT | 282,099 USDT |
+| Mean gross exposure | 9,953 USDT | 1,065 USDT |
+| Activity | 100.0% of days | 7 entries / 14 active days |
+
+Strategy 1's result remained positive while BTC buy-and-hold returned −32.23% and the equal-weight four-asset basket returned −42.29%; however, 7,718 USDT of its 9,953 USDT mean gross exposure was in BTC. Strategy 2 lost money before costs, and its sparse activity still limits statistical precision. All annualised statistics retain the original 252-observation convention for comparability.
 
 ## Frozen forward validation
 
@@ -55,7 +74,7 @@ python strategy2_forward_validation.py
 
 See [`forward_validation/README.md`](forward_validation/README.md) for the freeze contract, dated-snapshot workflow, and artifact schema. New results are explicitly labelled forward validation and do not replace the original holdout.
 
-The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 1 returned **+3.52%** with a **1.109 Sharpe**, **−4.26% maximum drawdown**, and **+1,565 USDT net PnL**. Strategy 2 returned **−10.36%** with a **−1.850 Sharpe**, **−10.73% maximum drawdown**, and **−1,563 USDT net PnL** across four entries. See the [dated snapshot](forward_validation/snapshots/2026-07-21-corrected/README.md) and its machine-readable accounting. The window remains too short to establish durable performance for either strategy.
+The latest snapshot covers 137 completed post-freeze days through 4 August 2026. Strategy 1 returned **+4.04%** with a **1.167 Sharpe**, **−4.26% maximum drawdown**, and **+1,796 USDT net PnL**. Strategy 2 returned **−13.57%** with a **−2.224 Sharpe**, **−13.57% maximum drawdown**, and **−2,048 USDT net PnL** across five entries. See the [dated snapshot](forward_validation/snapshots/2026-08-04/README.md) and its machine-readable forward and continuous post-selection accounting.
 
 ## Methodology
 
@@ -69,7 +88,7 @@ The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 
 
 ## Research engineering
 
-- **22 deterministic tests** cover time alignment, transaction costs, signal construction,
+- **25 deterministic tests** cover time alignment, transaction costs, signal construction,
   immutable strategy specifications, cutoff boundaries, and snapshot self-consistency.
 - **Continuous integration** compiles every research module and runs the complete offline test
   suite on each push and pull request.
@@ -106,6 +125,7 @@ The corrected snapshot covers 123 completed days through 21 July 2026. Strategy 
 ├── forward_validation/
 │   ├── frozen_strategy1.json        # hashed selected specification
 │   ├── frozen_strategy2.json        # hashed Strategy 2 specification
+│   ├── snapshots/                   # immutable dated forward and combined evidence
 │   └── README.md                    # forward-test protocol and commands
 ├── forward_validation.py            # post-2026-03-20 Strategy 1 runner
 ├── strategy2_forward_validation.py  # post-2026-03-20 Strategy 2 runner
@@ -178,8 +198,8 @@ The full notebook is substantially slower and requires either the local caches o
 
 - This is a historical coursework study, not a live trading system.
 - Binance notional-volume share is a proxy for BTC dominance, not total-market-cap dominance.
-- The final holdout is short, and Strategy 2 produces only two holdout trades.
-- The 123-day forward window is also short; Strategy 2 entered only four times.
+- The final holdout contains 126 consecutive daily observations—about 4.1 calendar months—and Strategy 2 produces only two holdout trades.
+- The continuous 263-day post-selection window is longer but still only about 8.6 calendar months; Strategy 2 entered seven times.
 - Fees, market impact, funding, borrow constraints, taxes, and operational risk are not modelled in full.
 - Strategy 1's positive holdout result is concentrated in BTC and should not be interpreted as broad cross-asset validation.
 

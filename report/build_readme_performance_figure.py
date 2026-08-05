@@ -18,7 +18,7 @@ from PIL import Image
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HISTORY_FIGURE = PROJECT_ROOT / "report" / "figures" / "cumulative_returns.png"
-DEFAULT_SNAPSHOT = PROJECT_ROOT / "forward_validation" / "snapshots" / "2026-07-21-corrected"
+DEFAULT_SNAPSHOT = PROJECT_ROOT / "forward_validation" / "snapshots" / "2026-08-04"
 DEFAULT_OUTPUT = PROJECT_ROOT / "report" / "figures" / "readme_performance_overview.png"
 DEFAULT_SOCIAL_OUTPUT = PROJECT_ROOT / "report" / "figures" / "github_social_preview.png"
 HISTORY_START = pd.Timestamp("2020-01-02")
@@ -107,6 +107,9 @@ def build_figure(history_figure: Path, snapshot_dir: Path, output: Path) -> None
     colors = {"Strategy 1": "#1f77b4", "Strategy 2": "#2ca02c"}
     shades = {"Development": "#E3ECF7", "Holdout": "#F3E9DC", "Frozen forward": "#ECEAF4"}
     forward_end = max(strategy1.index.max(), strategy2.index.max())
+    forward_days = len(strategy1_daily)
+    if len(strategy2_daily) != forward_days:
+        raise ValueError("Strategy forward snapshots must contain the same number of days.")
 
     fig, ax = plt.subplots(figsize=(11.5, 5.2), constrained_layout=True)
     ax.axvspan(HISTORY_START, HOLDOUT_START, facecolor=shades["Development"], edgecolor="none")
@@ -152,7 +155,7 @@ def build_figure(history_figure: Path, snapshot_dir: Path, output: Path) -> None
     ax.text(
         0.5,
         1.01,
-        "Net of estimated costs · parameters frozen after 20 March 2026 · 123 completed daily candles",
+        f"Net of estimated costs · parameters frozen after 20 March 2026 · {forward_days} completed daily candles",
         transform=ax.transAxes,
         color="#475569",
         fontsize=8.8,
@@ -184,6 +187,9 @@ def build_social_preview(history_figure: Path, snapshot_dir: Path, output: Path)
     text_primary = "#0F172A"
     text_secondary = "#475569"
     forward_end = max(strategy1.index.max(), strategy2.index.max())
+    forward_days = len(strategy1_daily)
+    if len(strategy2_daily) != forward_days:
+        raise ValueError("Strategy forward snapshots must contain the same number of days.")
 
     fig = plt.figure(figsize=(12.8, 6.4), dpi=100, facecolor=background)
     grid = fig.add_gridspec(
@@ -225,7 +231,7 @@ def build_social_preview(history_figure: Path, snapshot_dir: Path, output: Path)
     copy_ax.text(
         0.0,
         0.50,
-        "123 DAYS AFTER THE FREEZE",
+        f"{forward_days} DAYS AFTER THE FREEZE",
         color=text_secondary,
         fontsize=9.5,
         fontweight="bold",

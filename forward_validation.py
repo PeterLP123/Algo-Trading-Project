@@ -33,6 +33,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 SPEC_PATH = PROJECT_ROOT / "forward_validation" / "frozen_strategy1.json"
 EXPECTED_SPEC_DIGEST = "769a3b2d040c0977f5dd51fc143dd24dcaa2f1202707554f79a137d3d3650b2a"
 FREEZE_CUTOFF = pd.Timestamp("2026-03-20", tz="UTC")
+ORIGINAL_HOLDOUT_START = pd.Timestamp("2025-11-15", tz="UTC")
+POST_SELECTION_ANCHOR = ORIGINAL_HOLDOUT_START - pd.Timedelta(days=1)
 OHLCV_COLUMNS = ["open", "high", "low", "close", "volume"]
 
 
@@ -376,7 +378,9 @@ def evaluate_forward_window(
         "total_gross_pnl": float(gross.sum()),
         "total_cost": float(costs.sum()),
         "total_net_pnl": float(net.sum()),
+        "total_turnover": float(turnover.sum()),
         "mean_daily_turnover": float(turnover.mean()),
+        "mean_gross_exposure": float(exposure.abs().sum(axis=1).mean()),
         "cost_to_absolute_gross_ratio": (
             float(costs.sum() / total_abs_gross) if total_abs_gross > 0 else np.nan
         ),
@@ -417,6 +421,33 @@ def evaluate_forward_window(
     }, daily
 
 
+def evaluate_post_selection_window(
+    run_state: dict[str, Any],
+    asset_panel: pd.DataFrame,
+    *,
+    post_selection_index: pd.DatetimeIndex,
+    trading_days: int = 252,
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    """Evaluate the uninterrupted period beginning with the original holdout.
+
+    This reuses the frozen strategy run and the same previous-day equity anchor
+    as the forward evaluation. It combines evidence; it does not reopen model
+    selection or alter the originally reported holdout result.
+    """
+    if post_selection_index.empty or post_selection_index.min() != ORIGINAL_HOLDOUT_START:
+        raise ValueError(
+            "Post-selection evaluation must begin on the original holdout start, "
+            f"{ORIGINAL_HOLDOUT_START.date()}."
+        )
+    return evaluate_forward_window(
+        run_state,
+        asset_panel,
+        forward_index=post_selection_index,
+        cutoff=POST_SELECTION_ANCHOR,
+        trading_days=trading_days,
+    )
+
+
 def validate_output_target(output_dir: Path) -> None:
     """Protect dated evidence snapshots from accidental replacement."""
     is_snapshot = "snapshots" in output_dir.parts
@@ -424,6 +455,8 @@ def validate_output_target(output_dir: Path) -> None:
         output_dir / "summary.json",
         output_dir / "daily.csv",
         output_dir / "cumulative_returns.png",
+        output_dir / "post_selection_daily.csv",
+        output_dir / "post_selection_cumulative_returns.png",
     ]
     if is_snapshot and any(path.exists() for path in existing):
         raise FileExistsError(
@@ -432,7 +465,13 @@ def validate_output_target(output_dir: Path) -> None:
         )
 
 
-def write_performance_plot(daily: pd.DataFrame, path: Path) -> None:
+def write_performance_plot(
+    daily: pd.DataFrame,
+    path: Path,
+    *,
+    title: str = "Frozen Strategy 1 forward validation",
+    anchor_label: str = "20 March 2026 close",
+) -> None:
     import matplotlib.pyplot as plt
     from matplotlib.ticker import PercentFormatter
 
@@ -460,9 +499,9 @@ def write_performance_plot(daily: pd.DataFrame, path: Path) -> None:
         label="Equal-weight basket",
     )
     ax.axhline(0.0, color="#94a3b8", linestyle="--", linewidth=0.9)
-    ax.set_title("Frozen Strategy 1 forward validation")
+    ax.set_title(title)
     ax.set_xlabel("Completed UTC daily candle")
-    ax.set_ylabel("Cumulative return from 20 March 2026 close")
+    ax.set_ylabel(f"Cumulative return from {anchor_label}")
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=1.0, decimals=0))
     ax.grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
     ax.grid(False, axis="x")
@@ -551,13 +590,31 @@ def run_forward_validation(
         forward_index=forward_index,
         trading_days=int(spec["execution"]["trading_days_per_year"]),
     )
+    post_selection_index = asset_panel.index[
+        (asset_panel.index >= ORIGINAL_HOLDOUT_START) & (asset_panel.index <= end_date)
+    ]
+    post_selection_metrics, post_selection_daily = evaluate_post_selection_window(
+        run_state,
+        asset_panel,
+        post_selection_index=post_selection_index,
+        trading_days=int(spec["execution"]["trading_days_per_year"]),
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     daily_path = output_dir / "daily.csv"
     summary_path = output_dir / "summary.json"
     figure_path = output_dir / "cumulative_returns.png"
+    post_selection_daily_path = output_dir / "post_selection_daily.csv"
+    post_selection_figure_path = output_dir / "post_selection_cumulative_returns.png"
     daily.to_csv(daily_path, float_format="%.10g")
+    post_selection_daily.to_csv(post_selection_daily_path, float_format="%.10g")
     write_performance_plot(daily, figure_path)
+    write_performance_plot(
+        post_selection_daily,
+        post_selection_figure_path,
+        title="Frozen Strategy 1 continuous post-selection evidence",
+        anchor_label="14 November 2025 close",
+    )
     summary = {
         "status": "frozen_forward_validation",
         "generated_at_utc": pd.Timestamp.now(tz="UTC").isoformat(),
@@ -569,10 +626,13 @@ def run_forward_validation(
         "frozen_history_sha256": history_hashes,
         "forward_cache_sha256": forward_hashes,
         "metrics": metrics,
+        "post_selection_metrics": post_selection_metrics,
         "artifacts": {
             "daily": daily_path.name,
             "summary": summary_path.name,
             "figure": figure_path.name,
+            "post_selection_daily": post_selection_daily_path.name,
+            "post_selection_figure": post_selection_figure_path.name,
         },
     }
     summary_path.write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n", encoding="utf-8")
@@ -622,6 +682,16 @@ def main() -> None:
     print(f"  Sharpe: {metrics['sharpe']:.3f}")
     print(f"  Max drawdown: {metrics['max_drawdown']:.2%}")
     print(f"  Net PnL: {metrics['total_net_pnl']:.2f} USDT")
+    post_selection = summary["post_selection_metrics"]
+    print("Continuous post-selection evidence")
+    print(
+        f"  Window: {post_selection['start']} to {post_selection['end']} "
+        f"({post_selection['n_days']} days)"
+    )
+    print(f"  Net return: {post_selection['total_return']:.2%}")
+    print(f"  Sharpe: {post_selection['sharpe']:.3f}")
+    print(f"  Max drawdown: {post_selection['max_drawdown']:.2%}")
+    print(f"  Net PnL: {post_selection['total_net_pnl']:.2f} USDT")
 
 
 if __name__ == "__main__":

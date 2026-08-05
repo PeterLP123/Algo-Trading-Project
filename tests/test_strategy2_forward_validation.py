@@ -59,3 +59,27 @@ def test_committed_strategy2_snapshot_is_self_consistent() -> None:
     assert daily.iloc[-1]["cumulative_return"] == pytest.approx(metrics["total_return"], rel=1e-9)
     assert metrics["trade_entries"] == 4
     assert metrics["active_days"] == 9
+
+
+def test_latest_strategy2_snapshot_includes_continuous_post_selection_evidence() -> None:
+    snapshot = Path("forward_validation/snapshots/2026-08-04")
+    summary = json.loads((snapshot / "strategy2_summary.json").read_text(encoding="utf-8"))
+    forward = pd.read_csv(snapshot / "strategy2_daily.csv", parse_dates=["date"])
+    combined = pd.read_csv(
+        snapshot / "strategy2_post_selection_daily.csv", parse_dates=["date"]
+    )
+    forward_metrics = summary["metrics"]
+    combined_metrics = summary["post_selection_metrics"]
+
+    assert len(forward) == forward_metrics["n_days"] == 137
+    assert len(combined) == combined_metrics["n_days"] == 263
+    assert combined["date"].min() == s2fv.ORIGINAL_HOLDOUT_START
+    assert combined["date"].max() == pd.Timestamp("2026-08-04", tz="UTC")
+    assert combined["net_pnl"].sum() == pytest.approx(
+        combined_metrics["total_net_pnl"], rel=1e-9
+    )
+    assert combined.iloc[-1]["cumulative_return"] == pytest.approx(
+        combined_metrics["total_return"], rel=1e-9
+    )
+    assert combined_metrics["trade_entries"] == 7
+    assert combined_metrics["active_days"] == 14

@@ -1,0 +1,154 @@
+{
+  "status": "frozen_forward_validation",
+  "generated_at_utc": "2026-08-05T10:15:22.056860+00:00",
+  "data_source": "Binance daily OHLCV via ccxt",
+  "freeze_cutoff": "2026-03-20",
+  "requested_end_date": "2026-08-04",
+  "frozen_spec_digest": "769a3b2d040c0977f5dd51fc143dd24dcaa2f1202707554f79a137d3d3650b2a",
+  "frozen_spec": {
+    "name": "strategy_1_walk_forward_selected",
+    "frozen_at": "2026-03-20",
+    "selection_source": "notebooks/strategy_analysis.ipynb",
+    "symbols": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "BNB/USDT",
+      "ADA/USDT"
+    ],
+    "timeframe": "1d",
+    "frozen_history_sha256": {
+      "BTCUSDT_1d_cleaned.parquet": "d4b09f630191bd399955a165ac3c3bec938b7951a2f514f6e780eae9cc783cac",
+      "ETHUSDT_1d_cleaned.parquet": "e92b17a8502f22182d240087cfb5d1b60355b9c7bd381e95354f8e09c9152b8a",
+      "BNBUSDT_1d_cleaned.parquet": "416629ab25306e325af68aae4504ad146ff00b5ee6a2731209187de2dddcb531",
+      "ADAUSDT_1d_cleaned.parquet": "42df444a5a9d9e27e8f6c4c891ff3a33eefdf46835d07ab0ced5167f81594187"
+    },
+    "parameters": {
+      "ma_window": 140,
+      "vol_window": 30,
+      "dead_zone": 1.0,
+      "signal_clip": 5.0,
+      "gross_cap": 10000.0,
+      "rebalance_every": 10,
+      "use_mvo": true,
+      "cov_window": 120,
+      "gamma": 1.0
+    },
+    "execution": {
+      "initial_capital": 10000.0,
+      "spread_estimator": "Abdi-Ranaldo",
+      "spread_window": 21,
+      "lag_spread_one_bar": true,
+      "signal_execution_lag_bars": 1,
+      "trading_days_per_year": 252
+    }
+  },
+  "frozen_history_sha256": {
+    "BTCUSDT_1d_cleaned.parquet": "d4b09f630191bd399955a165ac3c3bec938b7951a2f514f6e780eae9cc783cac",
+    "ETHUSDT_1d_cleaned.parquet": "e92b17a8502f22182d240087cfb5d1b60355b9c7bd381e95354f8e09c9152b8a",
+    "BNBUSDT_1d_cleaned.parquet": "416629ab25306e325af68aae4504ad146ff00b5ee6a2731209187de2dddcb531",
+    "ADAUSDT_1d_cleaned.parquet": "42df444a5a9d9e27e8f6c4c891ff3a33eefdf46835d07ab0ced5167f81594187"
+  },
+  "forward_cache_sha256": {
+    "BTCUSDT_1d_forward.parquet": "ac9527c5e93c9b54a53e7c0ef43ba73013ce7e0d3cdd4db7fecc0a251a21bc7f",
+    "ETHUSDT_1d_forward.parquet": "c201c85a1ceb817efda4fa200c58c449a302a7b50389210233284d80bd020ab5",
+    "BNBUSDT_1d_forward.parquet": "59c3ea82dd8182d47197c81e4b437ee2b84daff10dbf778229cd9c80c5bc151d",
+    "ADAUSDT_1d_forward.parquet": "1b9be7136758fa7afaf7f6310d1895968a360bdb3f5bc7e313dd3f3a9858ff2c"
+  },
+  "metrics": {
+    "start": "2026-03-21",
+    "end": "2026-08-04",
+    "n_days": 137,
+    "anchor_date": "2026-03-20",
+    "anchor_equity": 44433.78553769693,
+    "final_equity": 46229.51287405523,
+    "total_return": 0.04041355726567186,
+    "annualised_return": 0.07559555221578251,
+    "sharpe": 1.166607282804,
+    "sortino": 2.0400417713604666,
+    "max_drawdown": -0.04257973009279398,
+    "total_gross_pnl": 2051.337088349027,
+    "total_cost": 255.6097519907397,
+    "total_net_pnl": 1795.7273363582874,
+    "total_turnover": 77320.89123915866,
+    "mean_daily_turnover": 564.3860674391143,
+    "mean_gross_exposure": 10019.792922359784,
+    "cost_to_absolute_gross_ratio": 0.013038818417237275,
+    "active_days_pct": 1.0,
+    "btc_buy_and_hold_return": -0.09082546727285323,
+    "equal_weight_buy_and_hold_return": -0.13748707386500658,
+    "asset_diagnostics": {
+      "BTCUSDT": {
+        "total_gross_pnl": 558.5070831929695,
+        "mean_absolute_exposure": 7040.930794551688,
+        "total_turnover": 37788.9482257626
+      },
+      "ETHUSDT": {
+        "total_gross_pnl": 1047.8728724105968,
+        "mean_absolute_exposure": 706.8724416141883,
+        "total_turnover": 19079.341976329757
+      },
+      "BNBUSDT": {
+        "total_gross_pnl": 356.64468555950134,
+        "mean_absolute_exposure": 2254.167610194853,
+        "total_turnover": 19982.700846458847
+      },
+      "ADAUSDT": {
+        "total_gross_pnl": 88.31244718595946,
+        "mean_absolute_exposure": 17.822075999055635,
+        "total_turnover": 469.90019060745243
+      }
+    }
+  },
+  "post_selection_metrics": {
+    "start": "2025-11-15",
+    "end": "2026-08-04",
+    "n_days": 263,
+    "anchor_date": "2025-11-14",
+    "anchor_equity": 42002.42632212986,
+    "final_equity": 46229.51287405523,
+    "total_return": 0.10063910402476539,
+    "annualised_return": 0.09623366515785525,
+    "sharpe": 1.1916656197371618,
+    "sortino": 1.7921300308158188,
+    "max_drawdown": -0.049556502251729286,
+    "total_gross_pnl": 4562.7269833592445,
+    "total_cost": 335.64043143386107,
+    "total_net_pnl": 4227.086551925384,
+    "total_turnover": 90823.42348730272,
+    "mean_daily_turnover": 345.3362109783373,
+    "mean_gross_exposure": 9952.546976015437,
+    "cost_to_absolute_gross_ratio": 0.0079852572757139,
+    "active_days_pct": 1.0,
+    "btc_buy_and_hold_return": -0.3222978201577268,
+    "equal_weight_buy_and_hold_return": -0.4228705619415475,
+    "asset_diagnostics": {
+      "BTCUSDT": {
+        "total_gross_pnl": 3070.719366963192,
+        "mean_absolute_exposure": 7718.459982275703,
+        "total_turnover": 45433.770979925706
+      },
+      "ETHUSDT": {
+        "total_gross_pnl": 1047.894594667894,
+        "mean_absolute_exposure": 368.2538739575455,
+        "total_turnover": 19080.099024329134
+      },
+      "BNBUSDT": {
+        "total_gross_pnl": 355.78934508756066,
+        "mean_absolute_exposure": 1856.5137777193572,
+        "total_turnover": 25838.80681439375
+      },
+      "ADAUSDT": {
+        "total_gross_pnl": 88.32367664059882,
+        "mean_absolute_exposure": 9.319342062830732,
+        "total_turnover": 470.7466686541275
+      }
+    }
+  },
+  "artifacts": {
+    "daily": "daily.csv",
+    "summary": "summary.json",
+    "figure": "cumulative_returns.png",
+    "post_selection_daily": "post_selection_daily.csv",
+    "post_selection_figure": "post_selection_cumulative_returns.png"
+  }
+}

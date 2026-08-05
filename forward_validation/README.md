@@ -47,37 +47,41 @@ The default end date is the latest completed UTC day. To create a dated, reviewa
 
 ```bash
 python forward_validation.py \
-  --end-date 2026-07-21 \
-  --output-dir forward_validation/snapshots/2026-07-21-corrected
+  --end-date 2026-08-04 \
+  --output-dir forward_validation/snapshots/2026-08-04
 
 python strategy2_forward_validation.py \
-  --end-date 2026-07-21 \
-  --output-dir forward_validation/snapshots/2026-07-21-corrected
+  --end-date 2026-08-04 \
+  --output-dir forward_validation/snapshots/2026-08-04
 ```
 
 After the forward cache has been populated, the same endpoint can be reproduced without network access:
 
 ```bash
 python forward_validation.py \
-  --end-date 2026-07-21 \
+  --end-date 2026-08-04 \
   --output-dir forward_validation/results \
   --offline
 
 python strategy2_forward_validation.py \
-  --end-date 2026-07-21 \
+  --end-date 2026-08-04 \
   --output-dir forward_validation/results/strategy2 \
   --offline
 ```
 
 Each run writes:
 
-- `summary.json`: frozen specification, specification digest, pre-freeze data hashes, run timestamp, and headline metrics;
+- `summary.json`: frozen specification, specification digest, pre-freeze data hashes, run timestamp, forward metrics, and continuous post-selection metrics;
 - `daily.csv`: daily gross PnL, costs, net PnL, turnover, exposures, equity, and cumulative return.
 - `cumulative_returns.png`: net strategy performance against BTC and an equal-weight asset basket.
-- `strategy2_summary.json` and `strategy2_daily.csv`: the equivalent frozen Strategy 2 metrics and daily accounting.
+- `post_selection_daily.csv` and `post_selection_cumulative_returns.png`: Strategy 1 accounting and benchmarks from the original holdout start through the requested endpoint;
+- `strategy2_summary.json` and `strategy2_daily.csv`: the equivalent frozen Strategy 2 forward metrics and daily accounting;
+- `strategy2_post_selection_daily.csv`: Strategy 2 accounting from the original holdout start through the requested endpoint.
 
 The local cache and default results directory are ignored. Dated snapshots are intentionally eligible for review and version control.
 
 ## Interpretation
 
-Forward observations are a new test, not a continuation of tuning. A short or favourable forward window does not validate the strategy by itself. Results should be reported with the exact endpoint and sample length, and unsuccessful snapshots should be retained rather than replaced or retuned.
+Forward observations are a new test, not a continuation of tuning. The continuous post-selection view joins the original 126-observation holdout to all later frozen-strategy observations so return, drawdown, Sharpe, costs, and exposure can be assessed over one uninterrupted period. It is explicitly labelled post-selection evidence and does not replace the originally reported holdout.
+
+Results should be reported with the exact endpoint and sample length. All annualised statistics retain the project's 252-observation convention for comparability; because crypto trades every day, 126 daily observations are about 4.1 calendar months. Short or favourable windows do not validate a strategy by themselves, and unsuccessful snapshots should be retained rather than replaced or retuned.
