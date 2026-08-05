@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "status": "bounded_retrospective_search",
+  "registered_on": "2026-08-05",
+  "evidence_seen_through": "2026-08-04",
+  "known_prior_trial": {
+    "id": "confirmed_reversal_2x",
+    "result": "non_positive_equity_before_post_selection_anchor"
+  },
+  "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "research_question": "At a common 10000 USDT gross exposure, can a simple confirmation rule make the existing BTC notional-share mean-reversion idea economically positive after estimated costs?",
+  "fixed_contract": [
+    "BTC Binance notional-share proxy",
+    "20-day dominance z-score",
+    "126-day rolling threshold lookback",
+    "equal-weight available-altcoin basket",
+    "zero-z-score or seven-day exit",
+    "one-bar execution lag",
+    "lagged 21-day Abdi-Ranaldo half-spread costs"
+  ],
+  "variants": [
+    {
+      "id": "frozen_strategy2_2x",
+      "entry_mode": "accelerating_spike",
+      "gross_util": 2.0,
+      "role": "published_reference"
+    },
+    {
+      "id": "confirmed_reversal_2x",
+      "entry_mode": "confirmed_reversal",
+      "gross_util": 2.0,
+      "role": "preserved_failed_trial"
+    },
+    {
+      "id": "accelerating_spike_1x",
+      "entry_mode": "accelerating_spike",
+      "gross_util": 1.0,
+      "role": "same_risk_baseline"
+    },
+    {
+      "id": "confirmed_reversal_1x",
+      "entry_mode": "confirmed_reversal",
+      "gross_util": 1.0,
+      "role": "candidate"
+    },
+    {
+      "id": "falling_after_extreme_1x",
+      "entry_mode": "falling_after_extreme",
+      "gross_util": 1.0,
+      "role": "candidate"
+    },
+    {
+      "id": "relative_momentum_confirmation_1x",
+      "entry_mode": "relative_momentum_confirmation",
+      "gross_util": 1.0,
+      "role": "candidate"
+    },
+    {
+      "id": "falling_with_relative_momentum_1x",
+      "entry_mode": "falling_with_relative_momentum",
+      "gross_util": 1.0,
+      "role": "candidate"
+    }
+  ],
+  "retrospective_usefulness_screen": {
+    "window": "continuous_post_selection",
+    "minimum_entries": 5,
+    "require_positive_gross_pnl": true,
+    "require_positive_net_pnl": true,
+    "require_net_pnl_above": "accelerating_spike_1x",
+    "require_positive_equity_at_anchor": true,
+    "ranking": [
+      "highest total_net_pnl",
+      "lowest max_drawdown"
+    ],
+    "interpretation": "Passing identifies a descriptive candidate only, not a validated strategy."
+  },
+  "prospective_gate": {
+    "scope_start": "2026-08-05",
+    "minimum_new_entries": 20,
+    "preferred_new_entries": 30,
+    "policy": "No selected retrospective candidate may be described as validated before this independent event-count gate."
+  }
+}

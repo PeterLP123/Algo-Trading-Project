@@ -1,0 +1,241 @@
+{
+  "status": "caution_cost_conditional_candidate",
+  "confidence": "CAUTION",
+  "candidate": {
+    "entry_mode": "accelerating_spike",
+    "alt_universe": [
+      "ETH",
+      "BNB",
+      "SOL"
+    ],
+    "position_mode": "long_alts_short_btc",
+    "exit_mode": "fixed_holding",
+    "max_hold": 7,
+    "gross_util": 1.0,
+    "short_carry_rate_annual": 0.1
+  },
+  "decision_scenario": "fixed_20bps_one_way",
+  "observed_metrics": {
+    "status": "completed",
+    "start": "2025-11-15",
+    "end": "2026-08-04",
+    "n_days": 263,
+    "anchor_date": "2025-11-14",
+    "anchor_equity": 11393.456094450223,
+    "final_equity": 11569.018541303654,
+    "total_return": 0.015409059849622597,
+    "annualised_return": 0.014759841941713647,
+    "sharpe": 0.4272642897543999,
+    "sortino": 0.5133985059643003,
+    "max_drawdown": -0.020888627278346287,
+    "total_gross_pnl": 464.5303511510515,
+    "total_cost": 288.96790429762456,
+    "total_net_pnl": 175.56244685342693,
+    "total_turnover": 117086.69187483967,
+    "mean_daily_turnover": 445.19654705262235,
+    "mean_gross_exposure": 1520.9125475285166,
+    "mean_active_gross_exposure": 9999.999999999998,
+    "trade_entries": 6,
+    "entry_dates": [
+      "2025-11-27",
+      "2026-02-20",
+      "2026-03-21",
+      "2026-05-27",
+      "2026-06-19",
+      "2026-07-30"
+    ],
+    "active_days": 40,
+    "active_days_pct": 0.1520912547528517
+  },
+  "paper_cost_references": {
+    "abdi_ranaldo_monthly_corrected": {
+      "status": "completed",
+      "start": "2025-11-15",
+      "end": "2026-08-04",
+      "n_days": 263,
+      "anchor_date": "2025-11-14",
+      "anchor_equity": 8790.785157491466,
+      "final_equity": 9025.742701774925,
+      "total_return": 0.0267277086260298,
+      "annualised_return": 0.02559563628602679,
+      "sharpe": 0.5531166861652534,
+      "sortino": 0.660284005758605,
+      "max_drawdown": -0.024715202457809782,
+      "total_gross_pnl": 464.5303511510515,
+      "total_cost": 229.57280686759321,
+      "total_net_pnl": 234.95754428345836,
+      "total_turnover": 117086.69187483967,
+      "mean_daily_turnover": 445.19654705262235,
+      "mean_gross_exposure": 1520.9125475285166,
+      "mean_active_gross_exposure": 9999.999999999998,
+      "trade_entries": 6,
+      "entry_dates": [
+        "2025-11-27",
+        "2026-02-20",
+        "2026-03-21",
+        "2026-05-27",
+        "2026-06-19",
+        "2026-07-30"
+      ],
+      "active_days": 40,
+      "active_days_pct": 0.1520912547528517
+    },
+    "abdi_ranaldo_two_day_corrected": {
+      "status": "completed",
+      "start": "2025-11-15",
+      "end": "2026-08-04",
+      "n_days": 263,
+      "anchor_date": "2025-11-14",
+      "anchor_equity": 6227.694693119636,
+      "final_equity": 6141.799128762591,
+      "total_return": -0.013792513697234221,
+      "annualised_return": -0.013219470762895202,
+      "sharpe": -0.1543854894889158,
+      "sortino": -0.19319860411172415,
+      "max_drawdown": -0.060460748861649864,
+      "total_gross_pnl": 464.5303511510515,
+      "total_cost": 550.4259155080963,
+      "total_net_pnl": -85.8955643570448,
+      "total_turnover": 117086.69187483967,
+      "mean_daily_turnover": 445.19654705262235,
+      "mean_gross_exposure": 1520.9125475285166,
+      "mean_active_gross_exposure": 9999.999999999998,
+      "trade_entries": 6,
+      "entry_dates": [
+        "2025-11-27",
+        "2026-02-20",
+        "2026-03-21",
+        "2026-05-27",
+        "2026-06-19",
+        "2026-07-30"
+      ],
+      "active_days": 40,
+      "active_days_pct": 0.1520912547528517
+    }
+  },
+  "cost_break_even_one_way_bps": 34.99422727230992,
+  "bootstrap": {
+    "method": "seeded circular moving-block bootstrap of post-selection daily returns",
+    "seven_day_blocks": {
+      "block_length_days": 7,
+      "replications": 10000,
+      "seed": 20260805,
+      "total_return_ci_95": [
+        -0.03340786213468553,
+        0.07510407556168637
+      ],
+      "sharpe_ci_95": [
+        -1.3118626976501537,
+        1.6065466662454513
+      ],
+      "max_drawdown_ci_95": [
+        -0.04852519145500337,
+        -0.011491217839240219
+      ],
+      "probability_total_return_above_zero": 0.7059
+    },
+    "fourteen_day_blocks": {
+      "block_length_days": 14,
+      "replications": 10000,
+      "seed": 20260805,
+      "total_return_ci_95": [
+        -0.029898066191333603,
+        0.07008466941104137
+      ],
+      "sharpe_ci_95": [
+        -1.1556738333017618,
+        1.563136276291682
+      ],
+      "max_drawdown_ci_95": [
+        -0.04468851860928216,
+        -0.010135976698396998
+      ],
+      "probability_total_return_above_zero": 0.7055
+    },
+    "interpretation_limit": "Intervals describe resampling uncertainty for this selected path only; they do not correct adaptive model selection or the six-event evidence limit."
+  },
+  "trade_concentration": {
+    "observed_trades": 6,
+    "replications": 50000,
+    "seed": 20260806,
+    "total_net_pnl_ci_95": [
+      -274.072737132,
+      720.9628940499999
+    ],
+    "probability_total_net_pnl_above_zero": 0.75684,
+    "positive_trade_share": 0.5,
+    "largest_winner_share_of_total_net_pnl": 1.211511071505346,
+    "net_pnl_without_largest_winner": -37.13340123199998
+  },
+  "multiplicity": {
+    "adaptive_candidate_variants_screened": 24,
+    "correction": "No confirmatory multiplicity correction is claimed because the searches are dependent and adaptive.",
+    "deflated_sharpe_ratio": "Not reported: six entries and adaptive path selection make a precise DSR misleading."
+  },
+  "fallacy_scan": {
+    "coverage": "11/11 checked",
+    "items": [
+      {
+        "id": "simpsons_paradox",
+        "status": "caution_temporal_heterogeneity",
+        "finding": "The aggregate net result is positive, but the original holdout is -18.33 USDT while the later frozen-forward segment is +193.89 USDT."
+      },
+      {
+        "id": "ecological_fallacy",
+        "status": "not_detected",
+        "finding": "Claims remain at portfolio/trade level; no individual-asset inference is made from aggregates."
+      },
+      {
+        "id": "berksons_paradox",
+        "status": "not_detected",
+        "finding": "No association is inferred from conditioning on a common outcome, though asset selection is disclosed separately."
+      },
+      {
+        "id": "collider_bias",
+        "status": "not_detected",
+        "finding": "No regression control set or conditioned collider is used."
+      },
+      {
+        "id": "base_rate_neglect",
+        "status": "addressed_with_gate",
+        "finding": "The base rate is explicit: six entries in 263 days, below the registered 20-entry interpretation gate."
+      },
+      {
+        "id": "regression_to_the_mean",
+        "status": "red_flag_for_mechanism_claim",
+        "finding": "Entries are selected at extreme dominance readings, so subsequent normalisation is expected mechanically; only traded relative PnL can support usefulness."
+      },
+      {
+        "id": "survivorship_bias",
+        "status": "caution",
+        "finding": "The retrospectively selected ETH/BNB/SOL basket consists of continuously available liquid survivors; delisted or unavailable assets are not represented."
+      },
+      {
+        "id": "look_elsewhere_effect",
+        "status": "red_flag_for_confirmatory_claim",
+        "finding": "At least 24 adaptive candidate variants were screened across entry, basket, holding, relative-value and horizon stages."
+      },
+      {
+        "id": "garden_of_forking_paths",
+        "status": "caution_but_audited",
+        "finding": "The search was adaptive and retrospective, but every registered path and failure is retained in the experiment ledger."
+      },
+      {
+        "id": "correlation_not_causation",
+        "status": "addressed_by_claim_scope",
+        "finding": "Results are described as associations and cost-conditional performance, not as BTC dominance causing altcoin returns."
+      },
+      {
+        "id": "reverse_causality",
+        "status": "caution",
+        "finding": "The notional-share dominance proxy is endogenous to prices and volumes, so directional economic interpretation remains uncertain."
+      }
+    ]
+  },
+  "decision": {
+    "descriptive_candidate": true,
+    "validated_strategy": false,
+    "deployment_ready": false,
+    "reason": "Positive at the registered 20 bps and monthly-corrected spread scenarios, but negative under the two-day-corrected spread and fixed 40 bps scenarios, concentrated in two trades, selected adaptively, and below the 20-entry prospective gate."
+  }
+}

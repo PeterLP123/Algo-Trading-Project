@@ -205,25 +205,25 @@ The walk forward scoring function is:
 % =============================================================================
 \section{Transaction Costs}
 
-For transaction costs, I use the Abdi--Ranaldo high low spread estimator \citep{AbdiRanaldo2017}. This estimator exploits the entire information content of OHLC bars. This provides an effective and stable measure for my daily frequency strategies.
-
-The estimator is:
+For transaction costs, I use the Abdi--Ranaldo close--high--low spread estimator \citep{AbdiRanaldo2017}. It estimates a proportional effective spread when quote data are unavailable. With $m_t=(\ln h_t+\ln l_t)/2$ denoting the log mid-range, the two-day squared-spread observation is
 
 \begin{equation}
-  \hat{s}_t^{2} = 4\left(\ln c_{t-1} - m_{t-1}\right)\left(\ln c_t - m_t\right)
+  \hat{s}_t^{2} = 4\left(\ln c_t-m_t\right)\left(\ln c_t-m_{t+1}\right).
 \end{equation}
 
-where $c_t$ is the closing price and $m_t = (\ln h_t + \ln l_t)/2$ is the log midpoint. This is smoothed via a 21-day rolling mean to compute $\hat{s}_t = \sqrt{\left|\hat{s}_t^{2}\right|}$. These costs are applied at each bar. I chose this estimator as it remains well defined given all market conditions.
+Abdi and Ranaldo define two corrections for negative sample moments. The monthly-corrected estimator is $\sqrt{\max\{N^{-1}\sum_t \hat{s}_t^2,0\}}$; the two-day-corrected estimator is $N^{-1}\sum_t\sqrt{\max\{\hat{s}_t^2,0\}}$. The backtest uses a 21-day window, divides the full spread by two, and lags that half-spread by one completed bar before charging traded notional.
+
+A code audit found that the earlier implementation instead applied an absolute value to a negative 21-day mean. This is neither correction defined in the paper and converts wrong-signed estimation noise into a positive cost. The implementation now supports only the two published corrections. The monthly-corrected version is the primary restatement for the frozen strategies, and the two-day-corrected version is reported as a sensitivity case. No signal, parameter, trade, position, or turnover series was retuned.
 
 \subsection{Cost Sensitivity}
 
-The cost-sensitivity analysis shows that Strategy 1 is much more resilient to trading costs than Strategy 2. Even when the estimated half spread is tripled, Strategy 1 still maintains a positive net Sharpe ratio and performance only weakening gradually. Strategy 2 is much more vulnerable. Its Sharpe falls quickly as costs rise and turns negative when the half spread is doubled. This fits the way the strategies are built since Strategy 1 trades less often and with lower turnover, while Strategy 2 uses a levered basket of altcoins where wider spreads and repeated rebalancing make slippage much more damaging.
+For the fixed relative-value candidate discussed below, the monthly correction implies a turnover-weighted one-way execution cost of 14.9 basis points, while the two-day correction implies 42.3 basis points. The observed break-even is 35.0 basis points. The correction choice therefore changes the sign of the net result and must be shown rather than hidden behind one ``conservative'' label. Fixed 5, 10, 20, and 40 basis-point scenarios provide transparent reference points.
 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.95\textwidth]{figures/transaction_cost_sensitivity.png}
-    \caption{Transaction Cost Sensitivity Analysis}
+    \includegraphics[width=0.92\textwidth]{figures/strategy2_candidate_effective_cost.png}
+    \caption{Turnover-weighted one-way execution costs for the unchanged relative-value candidate. Short carry is excluded from the basis-point comparison and included in every net result.}
     \label{fig:costs}
 \end{figure}
 
@@ -236,6 +236,7 @@ Strategy 1 keeps total exposure fixed at \$10,000 throughout the backtest, regar
 
 Strategy 2 is designed to trade at a target exposure of \$20,000. In normal conditions, that is the amount the strategy puts to work. The \$100,000 gross exposure limit is a set constraint, while the $10 \times V_t$ term acts as a safety check so the strategy never takes on more than 10 times its current equity. In practice, this means the strategy usually trades with a fixed \$20,000 exposure, but if the portfolio value falls far enough, the position size is automatically reduced to avoid excessive leverage.
 
+\clearpage
 \subsection{Metrics}
 
 \begin{table}[htbp]
@@ -262,17 +263,18 @@ Active Days (\%)          & 93.5   & 100.0  & 9.0    & 2.4    \\
 Avg.\ Holding Period (days) & 10 & 10 & 3.6 & 1.5 \\
 \bottomrule
 \end{tabular}
-\caption{Original submitted performance metrics for both strategies (net of costs). Ratios use the project's 252-observation annualisation convention. Strategy 1 holdout start equity: \$41{,}903. Strategy 2 is tuned with $u = 2.0$ (\$20{,}000 gross).}
+\caption{Original submitted performance metrics for both strategies (net of the estimator implementation used at submission). These historical rows are retained for provenance; the paper-correct cost restatement is reported separately below. Ratios use the project's 252-observation annualisation convention. Strategy 1 holdout start equity: \$41{,}903. Strategy 2 is tuned with $u = 2.0$ (\$20{,}000 gross).}
 \label{tab:strategy_performance_combined}
 \end{table}
+\FloatBarrier
 
-Both strategies deliver positive risk-adjusted returns over the development sample, although both underperform BTC buy-and-hold in total return. Their main advantage is improved downside control. Strategy 1 achieves a maximum drawdown of $-22.3\%$, less than one-third of BTC buy-and-hold's $-76.6\%$, while its Sortino ratio of 1.151 is essentially in line with the benchmark's 1.146. This suggests that the trend-following signal captures a meaningful share of upside while avoiding much of the benchmark's extreme downside exposure. Strategy 2 also produces positive in-sample performance, but its drawdown of $-59.9\%$ remains high for a mean-reversion strategy, largely because the selected specification uses $2\times$ leverage. Trading costs are modest for Strategy 1 because of its low utilisation and infrequent rebalancing, whereas Strategy 2 is structurally more expensive due to its leveraged basket construction and the wider spreads of mid-cap altcoins.
+The submitted table records the model-selection outcome and the claims made at submission, but its net figures should not be interpreted as paper-correct Abdi--Ranaldo estimates after the audit above. Its still-valid qualitative points are that Strategy 1 was highly concentrated in BTC during the holdout and Strategy 2 was episodic, leveraged, and supported by very few trades. Current cost-dependent interpretation relies on the restated frozen evaluation below.
 
 The original holdout strengthens the case for Strategy 1. It records a Sharpe ratio of 1.30 with a shallow maximum drawdown of only $-3.8\%$, while BTC buy-and-hold over the same window returns $-26.2\%$ with a Sharpe of $-1.16$. The exposure breakdown shows that BTC accounted for the vast majority of gross exposure during this period. Strategy 2 instead lost money as the expected altcoin rebound did not materialise. Its two qualifying holdout trades are too few for a precise performance estimate, but the negative economic result is retained without retuning.
 
 \subsection{Continuous Post-Selection Evidence}
 
-Both frozen specifications were subsequently run through 4 August 2026. Covering the dates of the original 126-observation holdout and 137 completed post-freeze daily observations gives one uninterrupted 263-observation period from 15 November 2025. The metrics are recomputed from one stateful run of the hashed frozen evidence pipeline, not by adding rounded values from the submitted table. This longer window does not replace the original holdout: because its first segment was already observed when the strategies were frozen, it is explicitly treated as post-selection evidence.
+Both frozen specifications were subsequently run through 4 August 2026. Covering the dates of the original 126-observation holdout and 137 completed post-freeze daily observations gives one uninterrupted 263-observation period from 15 November 2025. The metrics are recomputed from one stateful run of the hashed frozen evidence pipeline using the monthly-corrected spread estimate, not by adding rounded values from the submitted table. This is a cost-method restatement with unchanged parameters and trades. The longer window does not replace the original holdout: because its first segment was already observed when the strategies were frozen, it is explicitly treated as post-selection evidence.
 
 \begin{table}[htbp]
 \centering
@@ -283,29 +285,48 @@ Both frozen specifications were subsequently run through 4 August 2026. Covering
 \toprule
 Metric & Strategy 1 & Strategy 2 \\
 \midrule
-Net Return (\%)          & +10.06 & -19.44 \\
-Annualised Return (\%)   & +9.62  & -18.71 \\
-Sharpe Ratio              & 1.192  & -2.231 \\
-Maximum Drawdown (\%)    & -4.96  & -19.44 \\
+Net Return (\%)          & +9.54 & -6.96 \\
+Annualised Return (\%)   & +9.13  & -6.68 \\
+Sharpe Ratio              & 1.251  & -1.521 \\
+Maximum Drawdown (\%)    & -4.30  & -6.96 \\
 Gross PnL (\$)            & +4,563 & -1,365 \\
-Transaction Costs (\$)    & -336   & -1,782 \\
-Net PnL (\$)              & +4,227 & -3,147 \\
+Transaction Costs (\$)    & -98   & -540 \\
+Net PnL (\$)              & +4,465 & -1,905 \\
 Total Turnover (\$)       & 90,823 & 282,099 \\
 Mean Gross Exposure (\$)  & 9,953  & 1,065 \\
 Activity                   & 100.0\% of days & 7 entries / 14 days \\
+Entry-Count Evidence Gate  & -- & 7 / 20 minimum; 30 preferred \\
 \bottomrule
 \end{tabular}
-\caption{Continuous post-selection results from 15 November 2025 to 4 August 2026, net of estimated costs. Annualised figures use 252 observations per year for comparability with the submitted analysis.}
+\caption{Continuous post-selection results from 15 November 2025 to 4 August 2026, net of monthly-corrected Abdi--Ranaldo costs. Annualised figures use 252 observations per year for comparability with the submitted analysis.}
 \label{tab:post_selection_performance}
 \end{table}
+\FloatBarrier
 
-Strategy 1 returned $10.06\%$ with a Sharpe ratio of 1.192 and a $-4.96\%$ maximum drawdown, while BTC buy-and-hold and the equal-weight four-asset basket returned $-32.23\%$ and $-42.29\%$, respectively. The result remains concentrated: mean absolute BTC exposure was \$7,718 of \$9,953 mean gross exposure. Strategy 2 returned $-19.44\%$ and lost \$1,365 before \$1,782 of estimated costs. Its mean exposure across all observations is low because it was active for only 14 days; when active, gross exposure remained approximately \$20,000.
+Strategy 1 returned $9.54\%$ with a Sharpe ratio of 1.251 and a $-4.30\%$ maximum drawdown, while BTC buy-and-hold and the equal-weight four-asset basket returned $-32.23\%$ and $-42.29\%$, respectively. The result remains concentrated: mean absolute BTC exposure was \$7,718 of \$9,953 mean gross exposure. Strategy 2 returned $-6.96\%$ and lost \$1,365 before \$540 of estimated costs. Its mean exposure across all observations is low because it was active for only 14 days; when active, gross exposure remained approximately \$20,000.
+
+Because Strategy 2 is episodic, elapsed days cannot substitute for trade events. A rule registered on 5 August 2026, after seven entries were observed, sets 20 as the bare minimum and 30 as preferred. Return and Sharpe are therefore descriptive, not reliable inference. At seven entries per 263 days, linear planning extrapolation implies roughly 751 total days, or 488 more; this is not a forecast or guarantee.
+
+\subsection{Post-Hoc Strategy 2 Research Lead}
+
+The frozen failure above remains the canonical Strategy 2 result. A separate adaptive retrospective programme retained all negative paths while screening 24 candidate variants across entry confirmation, liquid baskets, fixed holding periods, and relative-value constructions. Entry confirmation produced excessive turnover; smaller baskets and fixed long-only holds remained gross-negative. The first economically different lead was a $1\times$ gross, seven-day trade allocating 50\% long to an equal-weight ETH/BNB/SOL basket and 50\% short to BTC after the unchanged entry signal.
+
+This candidate earned \$465 gross over the same 263-day period. With a fixed 20 basis-point charge per dollar traded plus a 10\% annual BTC-short carry stress, it returned $+1.54\%$ (\$176 net), with a descriptive Sharpe of 0.43 and a $-2.09\%$ maximum drawdown. The paper's monthly-corrected Abdi--Ranaldo estimator returned $+2.67\%$ (\$235 net; 14.9 basis points one way), whereas its two-day-corrected estimator returned $-1.38\%$ (-\$86 net; 42.3 basis points). Fixed 5, 10, 20, and 40 basis-point scenarios are all retained; the 40 basis-point case lost \$59. The observed break-even was approximately 35 basis points one way.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{figures/strategy2_candidate_cost_sensitivity.png}
+    \caption{Cumulative return of the unchanged six-entry Strategy 2 candidate under both paper-corrected spread estimators and all four fixed one-way execution-cost scenarios.}
+    \label{fig:strategy2_candidate_costs}
+\end{figure}
+
+The evidence is insufficient for a performance claim. Only six entries occurred; the original holdout segment was negative; the largest winner exceeded total net profit; and a seeded seven-day moving-block bootstrap gave a 95\% return interval of $[-3.34\%,+7.51\%]$. The search was adaptive and subject to look-elsewhere and forking-path effects. I therefore describe it only as a cost-conditional research lead. Its specification is fixed for future monitoring and requires 20 new entries from 5 August 2026 onward (30 preferred), including realised execution and funding costs, before interpretation is reconsidered.
 
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\textwidth]{figures/readme_performance_overview.png}
-    \caption{Submitted cumulative-return paths extended through 137 post-freeze observations. Shading separates development, original holdout, and frozen-forward evidence.}
+    \caption{Submitted historical cumulative-return paths extended with monthly-corrected accounting for 137 post-freeze observations. Shading separates development, original holdout, and frozen-forward evidence.}
     \label{fig:returns}
 \end{figure}
 
@@ -313,7 +334,7 @@ Strategy 1 returned $10.06\%$ with a Sharpe ratio of 1.192 and a $-4.96\%$ maxim
 \thispagestyle{fancy}
 
 \section{Next Steps}
-Both strategies remain regime dependent. Strategy 1's positive result is heavily concentrated in BTC, so a pre-specified expansion of the asset universe could improve diversification. The 263-observation post-selection period improves on the original short holdout but covers only about 8.6 calendar months, while Strategy 2 generated just seven entries and remained clearly negative. Further research should therefore extend frozen monitoring rather than retune the failed specification. Any regime filter, more conservative leverage rule, or combined capital-allocation framework should be fixed before additional observations arrive and evaluated as a separate experiment.
+Both strategies remain regime dependent. Strategy 1's positive result is heavily concentrated in BTC, so a pre-specified expansion of the asset universe could improve diversification. The 263-observation post-selection period improves on the original short holdout but covers only about 8.6 calendar months, while frozen Strategy 2 generated just seven of the 20 entries required by its bare interpretive gate and remained negative even after the cost correction. Frozen monitoring should continue unchanged. The separate relative-value lead should likewise remain fixed and accumulate its own 20 new entries, with realised execution and funding records, rather than be promoted from its retrospective and cost-conditional result. Because the two published Abdi--Ranaldo corrections bracket the observed break-even, realised quotes, fees, slippage, and funding are more decision-relevant than choosing the favourable estimator. Any further regime filter or capital-allocation framework must be registered as another experiment and added to the complete search ledger.
 
 \nocite{*}
 \bibliographystyle{plainnat}

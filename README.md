@@ -5,7 +5,7 @@
 ![Jupyter](https://img.shields.io/badge/Jupyter-research-F37626?logo=jupyter&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/Code%20license-MIT-2ea44f.svg)](LICENSE)
 
-A cost-aware empirical comparison of two systematic cryptocurrency strategies: multi-asset trend following and BTC-dominance mean reversion. The project uses walk-forward model selection, an untouched holdout, realistic turnover accounting, and the Abdi-Ranaldo spread estimator.
+A cost-aware empirical comparison of two systematic cryptocurrency strategies: multi-asset trend following and BTC-dominance mean reversion. The project uses walk-forward model selection, an untouched holdout, realistic turnover accounting, and paper-corrected Abdi-Ranaldo spread estimates.
 
 [Read the final report](report/final_report.pdf) · [Explore the research notebook](notebooks/strategy_analysis.ipynb)
 
@@ -17,11 +17,12 @@ deterministic tests, and parameter-frozen forward monitoring. The result is deli
 asymmetric: trend following held up through 263 continuous post-selection observations, while
 BTC-dominance mean reversion failed; the failed strategy is preserved rather than retuned.
 
-![Original backtest extended with frozen Strategy 1 and Strategy 2 forward validation](report/figures/readme_performance_overview.png)
+![Strategy 1, Strategy 2, BTC, and equal-weight basket over the 263-day continuous post-selection period](report/figures/readme_combined_test_period.png)
 
-The original cumulative-return paths are extended through a separately shaded frozen-forward
-period. Both strategies retain their submitted specifications; the added observations are not part
-of model selection or the original holdout.
+The chart rebases every series to the 14 November 2025 pre-window equity and follows the complete
+263-day post-selection period. Shading separates the original holdout dates from the later
+frozen-forward observations, and the dotted line marks the formal parameter freeze. Both strategies
+retain their submitted specifications; no observation in this chart was used for retuning.
 
 ## Research question
 
@@ -42,26 +43,75 @@ The raw sample contains 2,271 daily candles from 1 January 2020 to 20 March 2026
 | Net PnL | $31,903 | **$2,431** | $6,818 | **-$1,222** |
 | Active days | 93.5% | **100.0%** | 9.0% | **2.4%** |
 
+These values preserve the submitted notebook and report as historical provenance. Their net-cost
+accounting used the former unsupported absolute-value correction; the corrected, no-retuning
+restatement begins in the continuous post-selection section below.
+
 Strategy 1 retained positive holdout performance and shallow drawdown, although its holdout exposure was heavily concentrated in BTC. Strategy 2 failed its holdout: only two out-of-sample trades occurred, so the negative result is both economically important and statistically weak. The repository preserves that result rather than retuning after seeing the holdout.
 
 ## Continuous post-selection evidence
 
-The latest frozen-strategy snapshot covers the original 126-observation holdout dates and the 137 later observations, producing one uninterrupted **263-day** evaluation from 15 November 2025 through 4 August 2026. This is a longer post-selection view—not a replacement for the originally reported holdout and not a new untouched test. Its metrics come from one stateful run of the hashed frozen evidence pipeline, rather than from adding the rounded submitted table to the forward table.
+The latest frozen-strategy snapshot covers the original 126-observation holdout dates and the 137 later observations, producing one uninterrupted **263-day** evaluation from 15 November 2025 through 4 August 2026. This is a longer post-selection view—not a replacement for the originally reported holdout and not a new untouched test. Its metrics come from one stateful run of the hashed frozen evidence pipeline, rather than from adding the rounded submitted table to the forward table. Costs were restated after an audit replaced an unsupported absolute-value treatment of negative spread moments with the paper's monthly correction; parameters and trades were not retuned.
 
 | Metric | Strategy 1 | Strategy 2 |
 |---|---:|---:|
-| Net return | **+10.06%** | **−19.44%** |
-| Annualised return | +9.62% | −18.71% |
-| Sharpe ratio | **1.192** | **−2.231** |
-| Maximum drawdown | **−4.96%** | **−19.44%** |
+| Net return | **+9.54%** | **−6.96%** |
+| Annualised return | +9.13% | −6.68% |
+| Sharpe ratio | **1.251** | **−1.521** |
+| Maximum drawdown | **−4.30%** | **−6.96%** |
 | Gross PnL | +4,563 USDT | −1,365 USDT |
-| Transaction costs | −336 USDT | −1,782 USDT |
-| Net PnL | **+4,227 USDT** | **−3,147 USDT** |
+| Transaction costs | −98 USDT | −540 USDT |
+| Net PnL | **+4,465 USDT** | **−1,905 USDT** |
 | Total turnover | 90,823 USDT | 282,099 USDT |
 | Mean gross exposure | 9,953 USDT | 1,065 USDT |
 | Activity | 100.0% of days | 7 entries / 14 active days |
+| Entry-count evidence gate | Not applicable | **7 / 20 minimum; 30 preferred** |
 
 Strategy 1's result remained positive while BTC buy-and-hold returned −32.23% and the equal-weight four-asset basket returned −42.29%; however, 7,718 USDT of its 9,953 USDT mean gross exposure was in BTC. Strategy 2 lost money before costs, and its sparse activity still limits statistical precision. All annualised statistics retain the original 252-observation convention for comparability.
+
+Strategy 2 is therefore **below the entry-count gate**: return and Sharpe remain descriptive
+economic outcomes, not reliable performance inference. The rule was registered prospectively on
+5 August 2026, after the existing seven entries had been observed, at 20 entries for the bare
+interpretive minimum and 30 for the preferred threshold. At the current combined rate of seven
+entries per 263 days, 20 entries corresponds to roughly 751 total observed days, or about 488
+additional days from this snapshot. That linear extrapolation is a planning estimate, not a forecast
+or guarantee.
+
+## Retrospective Strategy 2 research lead
+
+The failed frozen result remains the canonical Strategy 2 evidence. A separate, fully recorded
+adaptive search then tested entry confirmation, smaller baskets, fixed holding periods, and a
+beta-reduced relative-value expression. **Twenty-four candidate variants were screened and every
+failure is retained** in the [`experiments/` ledger](experiments/README.md).
+
+The only somewhat useful lead keeps the original entry signal but trades 50% gross long an
+equal-weight ETH/BNB/SOL basket and 50% gross short BTC for seven days at 1x total gross exposure.
+The short leg is charged a 10% annual carry stress.
+
+| 263-day cost scenario | Net return | Net PnL | Sharpe | Max drawdown |
+|---|---:|---:|---:|---:|
+| Abdi–Ranaldo monthly-corrected | +2.67% | +235 USDT | +0.55 | −2.47% |
+| Abdi–Ranaldo two-day-corrected | −1.38% | −86 USDT | −0.15 | −6.05% |
+| Fixed 5 bps one way | +2.71% | +351 USDT | +0.84 | −1.37% |
+| Fixed 10 bps one way | +2.35% | +293 USDT | +0.70 | −1.57% |
+| **Fixed 20 bps one way (registered decision case)** | **+1.54%** | **+176 USDT** | **+0.43** | **−2.09%** |
+| Fixed 40 bps one way | −0.63% | −59 USDT | −0.11 | −3.48% |
+
+![Effective one-way execution cost for every Strategy 2 candidate scenario](experiments/strategy2_cost_sensitivity/results/2026-08-04/effective_cost_comparison.png)
+
+![Strategy 2 fixed-candidate execution-cost sensitivity](experiments/strategy2_cost_sensitivity/results/2026-08-04/cumulative_returns.png)
+
+This is a **cost-conditional descriptive candidate, not a validated or deployable strategy**. It
+has only six entries; the original holdout segment remains negative; the largest winner is 121% of
+total net PnL; and a seeded seven-day block bootstrap gives a 95% return interval of −3.34% to
++7.51%. The break-even fixed charge is about 35 bps one way. The monthly-corrected estimator
+implies 14.9 bps and remains below that threshold, whereas the two-day-corrected estimator implies
+42.3 bps and exceeds it. The earlier −6.65% row came from reflecting negative 21-day moments with
+an unsupported absolute value and has been removed. See the [full uncertainty and 11/11 fallacy
+scan](experiments/strategy2_cost_sensitivity/results/2026-08-04/candidate_validation.md).
+
+No claim will be upgraded before the fixed candidate records at least **20 new entries from
+5 August 2026 onward** (30 preferred), including realised execution and BTC-short funding costs.
 
 ## Frozen forward validation
 
@@ -74,7 +124,7 @@ python strategy2_forward_validation.py
 
 See [`forward_validation/README.md`](forward_validation/README.md) for the freeze contract, dated-snapshot workflow, and artifact schema. New results are explicitly labelled forward validation and do not replace the original holdout.
 
-The latest snapshot covers 137 completed post-freeze days through 4 August 2026. Strategy 1 returned **+4.04%** with a **1.167 Sharpe**, **−4.26% maximum drawdown**, and **+1,796 USDT net PnL**. Strategy 2 returned **−13.57%** with a **−2.224 Sharpe**, **−13.57% maximum drawdown**, and **−2,048 USDT net PnL** across five entries. See the [dated snapshot](forward_validation/snapshots/2026-08-04/README.md) and its machine-readable forward and continuous post-selection accounting.
+The latest snapshot covers 137 completed post-freeze days through 4 August 2026. Strategy 1 returned **+4.04%** with a **1.289 Sharpe**, **−3.74% maximum drawdown**, and **+1,989 USDT net PnL**. Strategy 2 returned **−4.12%** with a **−1.292 Sharpe**, **−4.22% maximum drawdown**, and **−1,092 USDT net PnL** across five entries. See the [dated snapshot](forward_validation/snapshots/2026-08-04/README.md) and its machine-readable forward and continuous post-selection accounting.
 
 ## Methodology
 
@@ -83,12 +133,12 @@ The latest snapshot covers 137 completed post-freeze days through 4 August 2026.
 3. Reserve an untouched 126-day holdout before model selection.
 4. Select Strategy 1 parameters with expanding walk-forward folds and a stability-penalised Sharpe score.
 5. Tune Strategy 2 with Optuna's TPE sampler on the development sample only.
-6. Apply lagged Abdi-Ranaldo half-spread estimates to traded notional.
+6. Apply lagged, monthly-corrected Abdi-Ranaldo half-spread estimates to traded notional and report the paper's two-day correction as a sensitivity case.
 7. Report gross and net PnL, turnover, drawdown, activity, and holdout performance.
 
 ## Research engineering
 
-- **25 deterministic tests** cover time alignment, transaction costs, signal construction,
+- **59 deterministic tests** cover time alignment, transaction costs, signal construction,
   immutable strategy specifications, cutoff boundaries, and snapshot self-consistency.
 - **Continuous integration** compiles every research module and runs the complete offline test
   suite on each push and pull request.
@@ -96,6 +146,8 @@ The latest snapshot covers 137 completed post-freeze days through 4 August 2026.
   transaction costs, and evaluation behind stable public imports.
 - **Frozen specifications** are hash-verified, expose no tuning overrides, and reject modified
   pre-cutoff histories or incomplete candles.
+- **Prospective evidence gate** evaluates Strategy 2 by qualifying entry count—not inactive daily
+  observations—with hash-verified 20-entry minimum and 30-entry preferred thresholds.
 - **Immutable evidence** is published as dated, non-overwritable snapshots with daily accounting,
   machine-readable summaries, and reproducible figures.
 
@@ -107,7 +159,7 @@ The latest snapshot covers 137 completed post-freeze days through 4 August 2026.
 │   └── strategy_analysis.ipynb      # complete research workflow and saved outputs
 ├── report/
 │   ├── build_readme_performance_figure.py # reproducible README overview
-│   ├── final_report.pdf             # compiled six-page report
+│   ├── final_report.pdf             # compiled seven-page report
 │   ├── final_report.tex             # report source
 │   ├── LICENSE.md                    # rights for research materials
 │   ├── references.bib
@@ -125,10 +177,17 @@ The latest snapshot covers 137 completed post-freeze days through 4 August 2026.
 ├── forward_validation/
 │   ├── frozen_strategy1.json        # hashed selected specification
 │   ├── frozen_strategy2.json        # hashed Strategy 2 specification
+│   ├── strategy2_evidence_gate.json # prospective entry-count interpretation rule
 │   ├── snapshots/                   # immutable dated forward and combined evidence
 │   └── README.md                    # forward-test protocol and commands
+├── experiments/
+│   ├── README.md                    # complete adaptive Strategy 2 search ledger
+│   └── strategy2_*/                 # hashed specs plus immutable result artifacts
 ├── forward_validation.py            # post-2026-03-20 Strategy 1 runner
 ├── strategy2_forward_validation.py  # post-2026-03-20 Strategy 2 runner
+├── strategy2_*_search.py            # bounded retrospective experiment runners
+├── strategy2_cost_sensitivity.py    # fixed-candidate execution-cost scenarios
+├── strategy2_candidate_validation.py # seeded uncertainty and fallacy checks
 ├── strategy_helpers.py              # compatibility facade for existing notebook imports
 ├── wf_trend_pipeline.py             # Strategy 1 implementation
 ├── strategy2_pipeline.py            # Strategy 2 implementation
@@ -178,8 +237,8 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Rebuild the README performance overview and GitHub social preview from the committed historical
-figure and frozen snapshot:
+Rebuild the historical overview, combined-period README plot, and GitHub social preview from the
+committed historical figure and frozen snapshot:
 
 ```bash
 python report/build_readme_performance_figure.py
@@ -199,7 +258,8 @@ The full notebook is substantially slower and requires either the local caches o
 - This is a historical coursework study, not a live trading system.
 - Binance notional-volume share is a proxy for BTC dominance, not total-market-cap dominance.
 - The final holdout contains 126 consecutive daily observations—about 4.1 calendar months—and Strategy 2 produces only two holdout trades.
-- The continuous 263-day post-selection window is longer but still only about 8.6 calendar months; Strategy 2 entered seven times.
+- The continuous 263-day post-selection window is longer but still only about 8.6 calendar months; Strategy 2 has 7 of the 20 entries required by its prospective bare interpretive gate.
+- The post-hoc relative-value candidate was chosen after 24 adaptive variants, has only six entries, and is positive only below about 35 bps one-way execution cost in this sample.
 - Fees, market impact, funding, borrow constraints, taxes, and operational risk are not modelled in full.
 - Strategy 1's positive holdout result is concentrated in BTC and should not be interpreted as broad cross-asset validation.
 

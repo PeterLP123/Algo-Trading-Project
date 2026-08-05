@@ -1,0 +1,15 @@
+{
+  "status": "failed_before_evaluation",
+  "candidate_spec_digest": "ac439d1ecb99e43f6b1b8122553fecf4679f7a9ed14b69b2defa22a2ca3e2680",
+  "failure": "Strategy 2 equity was non-positive at the evaluation boundary.",
+  "diagnostics": {
+    "first_non_positive_date": "2021-05-19",
+    "minimum_equity": 0.0,
+    "final_equity": 0.0,
+    "gross_pnl_through_failure": 3179.108332738082,
+    "cost_through_failure": 15658.561409456302,
+    "entries_through_failure": 27
+  },
+  "interpretation": "Waiting for a confirmed dominance reversal increased activity and transaction costs enough to exhaust the account before the post-selection anchor. The failure is retained and the frozen published Strategy 2 is unchanged.",
+  "reproduced_by": "experiments/strategy2_variation_search/results/2026-08-04/summary.json"
+}

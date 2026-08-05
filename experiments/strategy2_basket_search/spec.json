@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "status": "bounded_retrospective_search",
+  "registered_on": "2026-08-05",
+  "evidence_seen_through": "2026-08-04",
+  "prior_search": {
+    "spec_digest": "7439a32d424e0cee02693c42bdeb9d00a2a7eb838c36d8b666b1a48e821c4263",
+    "result": "no_entry_confirmation_candidate_survived_to_the_evaluation_anchor"
+  },
+  "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "research_question": "With the original entry and exit logic fixed at 1x exposure, can a smaller, more liquid altcoin basket produce positive post-cost performance?",
+  "fixed_contract": [
+    "BTC Binance notional-share proxy",
+    "original accelerating-spike entry",
+    "20-day dominance z-score",
+    "126-day rolling threshold lookback",
+    "zero-z-score or seven-day exit",
+    "one-bar execution lag",
+    "lagged 21-day Abdi-Ranaldo half-spread costs",
+    "10000 USDT target gross exposure",
+    "equal weights within each registered basket"
+  ],
+  "basket_rationale": "The subsets are fixed from broad liquidity and continuity considerations, not selected from per-asset post-selection returns.",
+  "variants": [
+    {
+      "id": "broad_all_1x",
+      "alt_universe": ["ETH", "BNB", "SOL", "XRP", "ADA", "AVAX", "DOT", "LINK", "LTC", "MATIC"],
+      "role": "same_risk_baseline"
+    },
+    {
+      "id": "liquid5_1x",
+      "alt_universe": ["ETH", "BNB", "SOL", "XRP", "ADA"],
+      "role": "candidate"
+    },
+    {
+      "id": "core4_1x",
+      "alt_universe": ["ETH", "BNB", "SOL", "XRP"],
+      "role": "candidate"
+    },
+    {
+      "id": "core3_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "role": "candidate"
+    },
+    {
+      "id": "eth_bnb_1x",
+      "alt_universe": ["ETH", "BNB"],
+      "role": "candidate"
+    },
+    {
+      "id": "eth_only_1x",
+      "alt_universe": ["ETH"],
+      "role": "candidate"
+    }
+  ],
+  "retrospective_usefulness_screen": {
+    "window": "continuous_post_selection",
+    "minimum_entries": 5,
+    "require_positive_gross_pnl": true,
+    "require_positive_net_pnl": true,
+    "require_net_pnl_above": "broad_all_1x",
+    "ranking": [
+      "highest total_net_pnl",
+      "lowest max_drawdown"
+    ],
+    "interpretation": "Passing identifies a descriptive candidate only, not a validated strategy."
+  },
+  "prospective_gate": {
+    "scope_start": "2026-08-05",
+    "minimum_new_entries": 20,
+    "preferred_new_entries": 30
+  }
+}

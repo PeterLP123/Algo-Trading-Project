@@ -31,6 +31,59 @@ def test_strategy2_cli_exposes_no_parameter_overrides() -> None:
     forbidden = set(s2fv.load_frozen_spec()["parameters"])
 
     assert option_dests.isdisjoint(forbidden)
+    assert option_dests.isdisjoint({"minimum_entries", "preferred_entries"})
+
+
+def test_strategy2_evidence_gate_is_fixed_and_prospective() -> None:
+    gate = s2fv.load_evidence_gate()
+
+    assert s2fv.canonical_spec_digest(gate) == s2fv.EXPECTED_EVIDENCE_GATE_DIGEST
+    assert gate["metric"] == "trade_entries"
+    assert gate["scope"] == "continuous_post_selection"
+    assert gate["minimum_entries"] == 20
+    assert gate["preferred_entries"] == 30
+    assert gate["registered_on"] == "2026-08-05"
+    assert gate["registration_basis"] == {
+        "snapshot_end": "2026-08-04",
+        "observed_entries": 7,
+    }
+
+
+@pytest.mark.parametrize(
+    ("observed", "expected_status"),
+    [(19, "below_minimum"), (20, "minimum_met"), (30, "preferred_met")],
+)
+def test_entry_count_gate_has_fixed_status_boundaries(
+    observed: int,
+    expected_status: str,
+) -> None:
+    assessment = s2fv.assess_entry_count_gate(
+        {"trade_entries": observed, "n_days": 500},
+        s2fv.load_evidence_gate(),
+    )
+
+    assert assessment["status"] == expected_status
+    assert assessment["minimum_met"] is (observed >= 20)
+    assert assessment["preferred_met"] is (observed >= 30)
+
+
+def test_entry_count_gate_uses_entries_and_labels_time_as_planning_only() -> None:
+    assessment = s2fv.assess_entry_count_gate(
+        {"trade_entries": 7, "n_days": 263, "active_days": 14},
+        s2fv.load_evidence_gate(),
+    )
+
+    assert assessment["status"] == "below_minimum"
+    assert assessment["remaining_to_minimum"] == 13
+    assert assessment["remaining_to_preferred"] == 23
+    assert assessment["planning_estimate"] == {
+        "basis_entries": 7,
+        "basis_days": 263,
+        "observed_days_per_entry": pytest.approx(263 / 7),
+        "estimated_total_days_to_minimum": 751,
+        "estimated_additional_days_to_minimum": 488,
+        "planning_only": True,
+    }
 
 
 def test_strategy2_runner_imports_no_optimisation_library() -> None:
@@ -71,6 +124,8 @@ def test_latest_strategy2_snapshot_includes_continuous_post_selection_evidence()
     forward_metrics = summary["metrics"]
     combined_metrics = summary["post_selection_metrics"]
 
+    assert summary["spread_correction"] == s2fv.ABDI_RANALDO_CORRECTION
+    assert s2fv.ABDI_RANALDO_CORRECTION == "monthly_corrected"
     assert len(forward) == forward_metrics["n_days"] == 137
     assert len(combined) == combined_metrics["n_days"] == 263
     assert combined["date"].min() == s2fv.ORIGINAL_HOLDOUT_START
@@ -83,3 +138,9 @@ def test_latest_strategy2_snapshot_includes_continuous_post_selection_evidence()
     )
     assert combined_metrics["trade_entries"] == 7
     assert combined_metrics["active_days"] == 14
+    assert summary["evidence_gate_digest"] == s2fv.EXPECTED_EVIDENCE_GATE_DIGEST
+    assert summary["evidence_gate"] == s2fv.load_evidence_gate()
+    assert summary["post_selection_evidence_gate"] == s2fv.assess_entry_count_gate(
+        combined_metrics,
+        summary["evidence_gate"],
+    )

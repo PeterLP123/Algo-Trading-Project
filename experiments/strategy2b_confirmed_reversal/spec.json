@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "status": "prospective_candidate",
+  "strategy": "btc_dominance_mean_reversion_confirmed_reversal",
+  "designed_on": "2026-08-05",
+  "evidence_seen_through": "2026-08-04",
+  "first_prospective_candle": "2026-08-05",
+  "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "hypothesis": "Waiting for an observed turn down after an extreme BTC notional-share spike avoids entering while BTC leadership is still accelerating.",
+  "single_change": {
+    "parameter": "entry_mode",
+    "baseline": "accelerating_spike",
+    "candidate": "confirmed_reversal",
+    "rule": "Enter when the prior daily dominance z-score was above its rolling 80th-percentile threshold and the one-day dominance change crosses from non-negative to negative; retain the one-bar execution lag."
+  },
+  "unchanged_contract": [
+    "BTC Binance notional-share proxy",
+    "20-day dominance z-score",
+    "126-day rolling threshold lookback",
+    "equal-weight available-altcoin basket",
+    "zero-z-score or seven-day exit",
+    "one-bar execution lag",
+    "lagged 21-day Abdi-Ranaldo half-spread costs",
+    "20000 USDT target gross exposure"
+  ],
+  "retrospective_screen": {
+    "end": "2026-08-04",
+    "status": "post_hoc_diagnostic_only",
+    "checks": [
+      "positive continuous post-selection gross PnL",
+      "continuous post-selection net PnL above the frozen baseline",
+      "full transaction-cost accounting"
+    ]
+  },
+  "prospective_interpretation_gate": {
+    "scope_start": "2026-08-05",
+    "minimum_entries": 20,
+    "preferred_entries": 30,
+    "policy": "Do not claim reliable performance inference before the minimum number of new prospective entries."
+  }
+}

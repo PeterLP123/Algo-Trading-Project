@@ -1,0 +1,75 @@
+{
+  "version": 2,
+  "status": "bounded_retrospective_cost_sensitivity",
+  "registered_on": "2026-08-05",
+  "evidence_seen_through": "2026-08-04",
+  "prior_search": {
+    "spec_digest": "78edd099883baa5c8cef3a680b86c7d4f881aa207c974fc6cb2b76c27051dadb",
+    "result": "longer_relative_value_horizons_did_not_improve_on_seven_days"
+  },
+  "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "candidate_id": "core3_relative_fixed_7d_1x",
+  "candidate_contract": {
+    "entry_mode": "accelerating_spike",
+    "alt_universe": ["ETH", "BNB", "SOL"],
+    "position_mode": "long_alts_short_btc",
+    "exit_mode": "fixed_holding",
+    "max_hold": 7,
+    "gross_util": 1.0,
+    "short_carry_rate_annual": 0.10
+  },
+  "research_question": "Is the gross-positive relative-value candidate useful under transparent fixed execution-cost scenarios and both paper-corrected Abdi-Ranaldo daily-bar estimators?",
+  "cost_scenarios": [
+    {
+      "id": "abdi_ranaldo_monthly_corrected",
+      "cost_mode": "abdi_ranaldo",
+      "spread_correction": "monthly_corrected",
+      "fixed_one_way_cost_bps": 0.0,
+      "role": "paper_estimator"
+    },
+    {
+      "id": "abdi_ranaldo_two_day_corrected",
+      "cost_mode": "abdi_ranaldo",
+      "spread_correction": "two_day_corrected",
+      "fixed_one_way_cost_bps": 0.0,
+      "role": "paper_estimator"
+    },
+    {
+      "id": "fixed_5bps_one_way",
+      "cost_mode": "fixed_bps",
+      "fixed_one_way_cost_bps": 5.0,
+      "role": "sensitivity"
+    },
+    {
+      "id": "fixed_10bps_one_way",
+      "cost_mode": "fixed_bps",
+      "fixed_one_way_cost_bps": 10.0,
+      "role": "sensitivity"
+    },
+    {
+      "id": "fixed_20bps_one_way",
+      "cost_mode": "fixed_bps",
+      "fixed_one_way_cost_bps": 20.0,
+      "role": "decision_scenario"
+    },
+    {
+      "id": "fixed_40bps_one_way",
+      "cost_mode": "fixed_bps",
+      "fixed_one_way_cost_bps": 40.0,
+      "role": "stress_scenario"
+    }
+  ],
+  "usefulness_definition": {
+    "window": "continuous_post_selection",
+    "decision_scenario": "fixed_20bps_one_way",
+    "minimum_entries": 5,
+    "require_positive_gross_pnl": true,
+    "require_positive_net_pnl_after_execution_and_carry": true,
+    "interpretation": "Passing means cost-conditional descriptive usefulness only. It does not validate the retrospectively selected strategy or establish achievable live costs."
+  },
+  "prospective_gate": {
+    "scope_start": "2026-08-05",
+    "minimum_new_entries": 20,
+    "preferred_new_entries": 30
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "status": "bounded_retrospective_search",
+  "registered_on": "2026-08-05",
+  "evidence_seen_through": "2026-08-04",
+  "prior_search": {
+    "spec_digest": "23228febb7e40a8a54f3b39b9fecc7842a557cc96973a0037140566f548e8db1",
+    "result": "relative_value_candidates_were_gross_positive_but_not_net_positive",
+    "least_negative_candidate": "core3_relative_fixed_7d_1x"
+  },
+  "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "research_question": "Given positive gross relative-value performance, can a longer fixed horizon amortise round-trip costs while preserving at least five post-selection entries?",
+  "fixed_contract": [
+    "BTC Binance notional-share proxy",
+    "original accelerating-spike entry",
+    "20-day dominance z-score",
+    "126-day rolling threshold lookback",
+    "one-bar execution lag",
+    "lagged 21-day Abdi-Ranaldo half-spread costs",
+    "10000 USDT total target gross exposure",
+    "50 percent gross long equal-weight ETH BNB SOL and 50 percent gross short BTC",
+    "10 percent annualised short-carry stress charged daily"
+  ],
+  "selection_disclosure": "The relative-value form, ETH BNB SOL basket and lower search bound follow four prior registered retrospective sweeps.",
+  "variants": [
+    {
+      "id": "core3_relative_fixed_7d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 7,
+      "role": "same_structure_baseline"
+    },
+    {
+      "id": "core3_relative_fixed_10d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 10,
+      "role": "candidate"
+    },
+    {
+      "id": "core3_relative_fixed_14d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 14,
+      "role": "candidate"
+    },
+    {
+      "id": "core3_relative_fixed_21d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 21,
+      "role": "candidate"
+    },
+    {
+      "id": "core3_relative_fixed_28d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 28,
+      "role": "candidate"
+    }
+  ],
+  "retrospective_usefulness_screen": {
+    "window": "continuous_post_selection",
+    "minimum_entries": 5,
+    "require_positive_gross_pnl": true,
+    "require_positive_net_pnl": true,
+    "require_net_pnl_above": "core3_relative_fixed_7d_1x",
+    "ranking": [
+      "highest total_net_pnl",
+      "lowest max_drawdown"
+    ],
+    "interpretation": "Passing identifies a descriptive candidate only, not a validated strategy."
+  },
+  "prospective_gate": {
+    "scope_start": "2026-08-05",
+    "minimum_new_entries": 20,
+    "preferred_new_entries": 30
+  }
+}

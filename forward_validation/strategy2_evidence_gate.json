@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "strategy": "btc_dominance_mean_reversion",
+  "metric": "trade_entries",
+  "scope": "continuous_post_selection",
+  "minimum_entries": 20,
+  "preferred_entries": 30,
+  "registered_on": "2026-08-05",
+  "registration_basis": {
+    "snapshot_end": "2026-08-04",
+    "observed_entries": 7
+  },
+  "policy": {
+    "below_minimum": "Treat performance metrics as descriptive economic outcomes only; do not claim reliable performance inference.",
+    "minimum_met": "Bare interpretive minimum reached; retain substantial uncertainty and avoid strong validation claims.",
+    "preferred_met": "Preferred event-count threshold reached; inference still remains conditional on the observed market regimes."
+  },
+  "planning_estimate": {
+    "method": "Linear extrapolation from observed entries per completed daily observation.",
+    "use": "Planning only; this is not a forecast, deadline, or guarantee that qualifying entries will occur."
+  }
+}

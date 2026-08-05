@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "status": "bounded_retrospective_search",
+  "registered_on": "2026-08-05",
+  "evidence_seen_through": "2026-08-04",
+  "prior_searches": [
+    {
+      "spec_digest": "7439a32d424e0cee02693c42bdeb9d00a2a7eb838c36d8b666b1a48e821c4263",
+      "result": "no_entry_confirmation_candidate_survived_to_the_evaluation_anchor"
+    },
+    {
+      "spec_digest": "b9508e679cf9f50a3bfbe4ef1b28b72fed329d324d964c24eeb6d9dde58089f5",
+      "result": "no_liquid_basket_candidate_was_gross_or_net_positive"
+    },
+    {
+      "spec_digest": "ea70a6c3357ebafd3d216a39ebbec55e43c4749c30894e1707732553696a3e82",
+      "result": "no_fixed_holding_candidate_was_gross_or_net_positive",
+      "least_negative_candidate": "core3_fixed_5d_1x"
+    }
+  ],
+  "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "research_question": "Does expressing the dominance-reversal hypothesis as a beta-reduced long-alt/short-BTC relative-value trade produce positive post-cost performance?",
+  "fixed_contract": [
+    "BTC Binance notional-share proxy",
+    "original accelerating-spike entry",
+    "20-day dominance z-score",
+    "126-day rolling threshold lookback",
+    "one-bar execution lag",
+    "lagged 21-day Abdi-Ranaldo half-spread costs",
+    "10000 USDT total target gross exposure",
+    "relative-value candidates allocate 50 percent gross long alts and 50 percent gross short BTC",
+    "10 percent annualised short-carry stress charged daily on the BTC leg"
+  ],
+  "selection_disclosure": "The ETH BNB SOL basket and five-day hold were selected retrospectively as the least-negative choices in preceding registered sweeps.",
+  "implementation_limit": "The short BTC leg is a conservative research proxy. Venue-specific perpetual funding, margin, liquidation and borrow constraints are not modelled beyond the fixed annual carry stress.",
+  "variants": [
+    {
+      "id": "core3_long_original_exit_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts",
+      "exit_mode": "z_or_max_hold",
+      "max_hold": 7,
+      "role": "original_exit_reference"
+    },
+    {
+      "id": "core3_long_fixed_5d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts",
+      "exit_mode": "fixed_holding",
+      "max_hold": 5,
+      "role": "same_basket_long_only_reference"
+    },
+    {
+      "id": "core3_relative_original_exit_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "z_or_max_hold",
+      "max_hold": 7,
+      "role": "candidate"
+    },
+    {
+      "id": "core3_relative_fixed_1d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 1,
+      "role": "candidate"
+    },
+    {
+      "id": "core3_relative_fixed_3d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 3,
+      "role": "candidate"
+    },
+    {
+      "id": "core3_relative_fixed_5d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 5,
+      "role": "candidate"
+    },
+    {
+      "id": "core3_relative_fixed_7d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 7,
+      "role": "candidate"
+    },
+    {
+      "id": "broad_relative_fixed_5d_1x",
+      "alt_universe": ["ETH", "BNB", "SOL", "XRP", "ADA", "AVAX", "DOT", "LINK", "LTC", "MATIC"],
+      "position_mode": "long_alts_short_btc",
+      "exit_mode": "fixed_holding",
+      "max_hold": 5,
+      "role": "candidate"
+    }
+  ],
+  "retrospective_usefulness_screen": {
+    "window": "continuous_post_selection",
+    "minimum_entries": 5,
+    "require_positive_gross_pnl": true,
+    "require_positive_net_pnl": true,
+    "require_net_pnl_above": "core3_long_fixed_5d_1x",
+    "ranking": [
+      "highest total_net_pnl",
+      "lowest max_drawdown"
+    ],
+    "interpretation": "Passing identifies a descriptive candidate only, not a validated strategy."
+  },
+  "prospective_gate": {
+    "scope_start": "2026-08-05",
+    "minimum_new_entries": 20,
+    "preferred_new_entries": 30
+  }
+}

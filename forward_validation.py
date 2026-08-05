@@ -32,6 +32,7 @@ from wf_trend_pipeline import (
 PROJECT_ROOT = Path(__file__).resolve().parent
 SPEC_PATH = PROJECT_ROOT / "forward_validation" / "frozen_strategy1.json"
 EXPECTED_SPEC_DIGEST = "769a3b2d040c0977f5dd51fc143dd24dcaa2f1202707554f79a137d3d3650b2a"
+ABDI_RANALDO_CORRECTION = "monthly_corrected"
 FREEZE_CUTOFF = pd.Timestamp("2026-03-20", tz="UTC")
 ORIGINAL_HOLDOUT_START = pd.Timestamp("2025-11-15", tz="UTC")
 POST_SELECTION_ANCHOR = ORIGINAL_HOLDOUT_START - pd.Timedelta(days=1)
@@ -571,7 +572,12 @@ def run_forward_validation(
         cov_window=int(parameters["cov_window"]),
         gamma=float(parameters["gamma"]),
     )
-    half_spread = compute_half_spread_frac(asset_panel, combined_frames, symbols)
+    half_spread = compute_half_spread_frac(
+        asset_panel,
+        combined_frames,
+        symbols,
+        correction=ABDI_RANALDO_CORRECTION,
+    )
     run_state = run_net_backtest(
         asset_panel,
         theta,
@@ -623,6 +629,7 @@ def run_forward_validation(
         "requested_end_date": str(end_date.date()),
         "frozen_spec_digest": EXPECTED_SPEC_DIGEST,
         "frozen_spec": spec,
+        "spread_correction": ABDI_RANALDO_CORRECTION,
         "frozen_history_sha256": history_hashes,
         "forward_cache_sha256": forward_hashes,
         "metrics": metrics,

@@ -1,0 +1,1124 @@
+{
+  "status": "completed_bounded_retrospective_search",
+  "requested_end_date": "2026-08-04",
+  "search_spec_digest": "23228febb7e40a8a54f3b39b9fecc7842a557cc96973a0037140566f548e8db1",
+  "search_spec": {
+    "version": 1,
+    "status": "bounded_retrospective_search",
+    "registered_on": "2026-08-05",
+    "evidence_seen_through": "2026-08-04",
+    "prior_searches": [
+      {
+        "spec_digest": "7439a32d424e0cee02693c42bdeb9d00a2a7eb838c36d8b666b1a48e821c4263",
+        "result": "no_entry_confirmation_candidate_survived_to_the_evaluation_anchor"
+      },
+      {
+        "spec_digest": "b9508e679cf9f50a3bfbe4ef1b28b72fed329d324d964c24eeb6d9dde58089f5",
+        "result": "no_liquid_basket_candidate_was_gross_or_net_positive"
+      },
+      {
+        "spec_digest": "ea70a6c3357ebafd3d216a39ebbec55e43c4749c30894e1707732553696a3e82",
+        "result": "no_fixed_holding_candidate_was_gross_or_net_positive",
+        "least_negative_candidate": "core3_fixed_5d_1x"
+      }
+    ],
+    "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+    "research_question": "Does expressing the dominance-reversal hypothesis as a beta-reduced long-alt/short-BTC relative-value trade produce positive post-cost performance?",
+    "fixed_contract": [
+      "BTC Binance notional-share proxy",
+      "original accelerating-spike entry",
+      "20-day dominance z-score",
+      "126-day rolling threshold lookback",
+      "one-bar execution lag",
+      "lagged 21-day Abdi-Ranaldo half-spread costs",
+      "10000 USDT total target gross exposure",
+      "relative-value candidates allocate 50 percent gross long alts and 50 percent gross short BTC",
+      "10 percent annualised short-carry stress charged daily on the BTC leg"
+    ],
+    "selection_disclosure": "The ETH BNB SOL basket and five-day hold were selected retrospectively as the least-negative choices in preceding registered sweeps.",
+    "implementation_limit": "The short BTC leg is a conservative research proxy. Venue-specific perpetual funding, margin, liquidation and borrow constraints are not modelled beyond the fixed annual carry stress.",
+    "variants": [
+      {
+        "id": "core3_long_original_exit_1x",
+        "alt_universe": [
+          "ETH",
+          "BNB",
+          "SOL"
+        ],
+        "position_mode": "long_alts",
+        "exit_mode": "z_or_max_hold",
+        "max_hold": 7,
+        "role": "original_exit_reference"
+      },
+      {
+        "id": "core3_long_fixed_5d_1x",
+        "alt_universe": [
+          "ETH",
+          "BNB",
+          "SOL"
+        ],
+        "position_mode": "long_alts",
+        "exit_mode": "fixed_holding",
+        "max_hold": 5,
+        "role": "same_basket_long_only_reference"
+      },
+      {
+        "id": "core3_relative_original_exit_1x",
+        "alt_universe": [
+          "ETH",
+          "BNB",
+          "SOL"
+        ],
+        "position_mode": "long_alts_short_btc",
+        "exit_mode": "z_or_max_hold",
+        "max_hold": 7,
+        "role": "candidate"
+      },
+      {
+        "id": "core3_relative_fixed_1d_1x",
+        "alt_universe": [
+          "ETH",
+          "BNB",
+          "SOL"
+        ],
+        "position_mode": "long_alts_short_btc",
+        "exit_mode": "fixed_holding",
+        "max_hold": 1,
+        "role": "candidate"
+      },
+      {
+        "id": "core3_relative_fixed_3d_1x",
+        "alt_universe": [
+          "ETH",
+          "BNB",
+          "SOL"
+        ],
+        "position_mode": "long_alts_short_btc",
+        "exit_mode": "fixed_holding",
+        "max_hold": 3,
+        "role": "candidate"
+      },
+      {
+        "id": "core3_relative_fixed_5d_1x",
+        "alt_universe": [
+          "ETH",
+          "BNB",
+          "SOL"
+        ],
+        "position_mode": "long_alts_short_btc",
+        "exit_mode": "fixed_holding",
+        "max_hold": 5,
+        "role": "candidate"
+      },
+      {
+        "id": "core3_relative_fixed_7d_1x",
+        "alt_universe": [
+          "ETH",
+          "BNB",
+          "SOL"
+        ],
+        "position_mode": "long_alts_short_btc",
+        "exit_mode": "fixed_holding",
+        "max_hold": 7,
+        "role": "candidate"
+      },
+      {
+        "id": "broad_relative_fixed_5d_1x",
+        "alt_universe": [
+          "ETH",
+          "BNB",
+          "SOL",
+          "XRP",
+          "ADA",
+          "AVAX",
+          "DOT",
+          "LINK",
+          "LTC",
+          "MATIC"
+        ],
+        "position_mode": "long_alts_short_btc",
+        "exit_mode": "fixed_holding",
+        "max_hold": 5,
+        "role": "candidate"
+      }
+    ],
+    "retrospective_usefulness_screen": {
+      "window": "continuous_post_selection",
+      "minimum_entries": 5,
+      "require_positive_gross_pnl": true,
+      "require_positive_net_pnl": true,
+      "require_net_pnl_above": "core3_long_fixed_5d_1x",
+      "ranking": [
+        "highest total_net_pnl",
+        "lowest max_drawdown"
+      ],
+      "interpretation": "Passing identifies a descriptive candidate only, not a validated strategy."
+    },
+    "prospective_gate": {
+      "scope_start": "2026-08-05",
+      "minimum_new_entries": 20,
+      "preferred_new_entries": 30
+    }
+  },
+  "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "results": {
+    "core3_long_original_exit_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 7503.411606573621,
+        "final_equity": 11259.936686841425,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 13397.994275844389,
+        "cost_through_failure": 12138.057589002978,
+        "entries_through_failure": 61
+      },
+      "cost_diagnostics": {
+        "total_spread_cost": 12138.057589002978,
+        "total_short_carry": 0.0
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 12516.997231468804,
+          "final_equity": 11995.222225561482,
+          "total_return": -0.04168531767311856,
+          "annualised_return": -0.08163296963672828,
+          "sharpe": -2.965219339745922,
+          "sortino": -1.5369633854313247,
+          "max_drawdown": -0.04168531767311854,
+          "total_gross_pnl": -206.20019769576356,
+          "total_cost": 315.5748082115578,
+          "total_net_pnl": -521.7750059073214,
+          "total_turnover": 40024.04184118255,
+          "mean_daily_turnover": 317.65112572367104,
+          "mean_gross_exposure": 238.0952380952381,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 3,
+          "active_days_pct": 0.023809523809523808
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 11995.222225561482,
+          "final_equity": 11259.936686841425,
+          "total_return": -0.06129820064135061,
+          "annualised_return": -0.10984236972659822,
+          "sharpe": -1.2677654314780757,
+          "sortino": -0.9781317662236552,
+          "max_drawdown": -0.07795706306366593,
+          "total_gross_pnl": -93.8220113778379,
+          "total_cost": 641.4635273422145,
+          "total_net_pnl": -735.2855387200524,
+          "total_turnover": 101289.80028930267,
+          "mean_daily_turnover": 739.3416079511144,
+          "mean_gross_exposure": 802.9197080291971,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 5,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 11,
+          "active_days_pct": 0.08029197080291971
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 12516.997231468804,
+          "final_equity": 11259.936686841425,
+          "total_return": -0.10042828334794396,
+          "annualised_return": -0.09643739315300093,
+          "sharpe": -1.4826592810091823,
+          "sortino": -0.9601246238214327,
+          "max_drawdown": -0.1004282833479439,
+          "total_gross_pnl": -300.02220907360146,
+          "total_cost": 957.0383355537724,
+          "total_net_pnl": -1257.060544627374,
+          "total_turnover": 141313.84213048522,
+          "mean_daily_turnover": 537.3149890892975,
+          "mean_gross_exposure": 532.319391634981,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 7,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 14,
+          "active_days_pct": 0.053231939163498096
+        }
+      }
+    },
+    "core3_long_fixed_5d_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 8177.866012014462,
+        "final_equity": 15436.200273869701,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 17417.66925464943,
+        "cost_through_failure": 11981.468980779762,
+        "entries_through_failure": 58
+      },
+      "cost_diagnostics": {
+        "total_spread_cost": 11981.468980779762,
+        "total_short_carry": 0.0
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 16294.51118210542,
+          "final_equity": 16229.772363987107,
+          "total_return": -0.0039730445052815755,
+          "annualised_return": -0.007930303927922155,
+          "sharpe": 0.008214206924902287,
+          "sortino": 0.006366404683545348,
+          "max_drawdown": -0.05947280798744379,
+          "total_gross_pnl": 263.5838122435019,
+          "total_cost": 328.32263036181143,
+          "total_net_pnl": -64.7388181183095,
+          "total_turnover": 43476.43714001254,
+          "mean_daily_turnover": 345.0510884127979,
+          "mean_gross_exposure": 793.6507936507936,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 10,
+          "active_days_pct": 0.07936507936507936
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 16229.772363987107,
+          "final_equity": 15436.200273869701,
+          "total_return": -0.048896070278736325,
+          "annualised_return": -0.08808955619641634,
+          "sharpe": -1.054386936353737,
+          "sortino": -0.8244725357072975,
+          "max_drawdown": -0.0807122110100767,
+          "total_gross_pnl": -345.9332157623964,
+          "total_cost": 447.6388743550071,
+          "total_net_pnl": -793.5720901174035,
+          "total_turnover": 71892.5743318761,
+          "mean_daily_turnover": 524.7633162910664,
+          "mean_gross_exposure": 1459.85401459854,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 4,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-07-30"
+          ],
+          "active_days": 20,
+          "active_days_pct": 0.145985401459854
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 16294.51118210542,
+          "final_equity": 15436.200273869701,
+          "total_return": -0.05267484852066706,
+          "annualised_return": -0.05052836115414061,
+          "sharpe": -0.4064754039511511,
+          "sortino": -0.3255550179465563,
+          "max_drawdown": -0.0807122110100767,
+          "total_gross_pnl": -82.34940351889452,
+          "total_cost": 775.9615047168185,
+          "total_net_pnl": -858.3109082357132,
+          "total_turnover": 115369.01147188863,
+          "mean_daily_turnover": 438.66544285889216,
+          "mean_gross_exposure": 1140.6844106463877,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 6,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-07-30"
+          ],
+          "active_days": 30,
+          "active_days_pct": 0.11406844106463879
+        }
+      }
+    },
+    "core3_relative_original_exit_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 1265.2688105751115,
+        "final_equity": 1265.2688105751115,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 1476.996235422182,
+        "cost_through_failure": 10211.727424847066,
+        "entries_through_failure": 61
+      },
+      "cost_diagnostics": {
+        "total_spread_cost": 9928.165781011448,
+        "total_short_carry": 283.5616438356164
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 1868.1766318404434,
+          "final_equity": 1442.8722573272141,
+          "total_return": -0.22765747481502252,
+          "annualised_return": -0.4034870237908924,
+          "sharpe": -3.0687580356295827,
+          "sortino": -2.0641802065564403,
+          "max_drawdown": -0.2276574748150225,
+          "total_gross_pnl": -70.73924652343169,
+          "total_cost": 354.5651279897977,
+          "total_net_pnl": -425.3043745132294,
+          "total_turnover": 40028.19076249388,
+          "mean_daily_turnover": 317.68405367058637,
+          "mean_gross_exposure": 238.09523809523805,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 3,
+          "active_days_pct": 0.023809523809523808
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 1442.8722573272141,
+          "final_equity": 1265.2688105751115,
+          "total_return": -0.12309020833285433,
+          "annualised_return": -0.21463713400646467,
+          "sharpe": -0.7171958791480628,
+          "sortino": -0.6647350306980963,
+          "max_drawdown": -0.17999131887152933,
+          "total_gross_pnl": 376.8800524207276,
+          "total_cost": 554.4834991728308,
+          "total_net_pnl": -177.60344675210325,
+          "total_turnover": 101120.49466542318,
+          "mean_daily_turnover": 738.1058004775414,
+          "mean_gross_exposure": 802.9197080291968,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 5,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 11,
+          "active_days_pct": 0.08029197080291971
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 1868.1766318404434,
+          "final_equity": 1265.2688105751115,
+          "total_return": -0.32272527714436416,
+          "annualised_return": -0.31159638422709757,
+          "sharpe": -1.4844380212014694,
+          "sortino": -1.1180433314038636,
+          "max_drawdown": -0.32272527714436416,
+          "total_gross_pnl": 306.1408058972959,
+          "total_cost": 909.0486271626285,
+          "total_net_pnl": -602.9078212653327,
+          "total_turnover": 141148.68542791705,
+          "mean_daily_turnover": 536.6870168361866,
+          "mean_gross_exposure": 532.3193916349809,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 7,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 14,
+          "active_days_pct": 0.053231939163498096
+        }
+      }
+    },
+    "core3_relative_fixed_1d_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 1229.7546211387555,
+        "final_equity": 1229.7546211387555,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 1966.1491358731685,
+        "cost_through_failure": 10736.394514734413,
+        "entries_through_failure": 68
+      },
+      "cost_diagnostics": {
+        "total_spread_cost": 10643.243829802906,
+        "total_short_carry": 93.15068493150683
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 1994.1587026878415,
+          "final_equity": 1631.9423093384332,
+          "total_return": -0.18163869949828582,
+          "annualised_return": -0.33028478184114307,
+          "sharpe": -2.762344441627846,
+          "sortino": -1.8801727448363652,
+          "max_drawdown": -0.18163869949828576,
+          "total_gross_pnl": -8.427996243936526,
+          "total_cost": 353.7883971054717,
+          "total_net_pnl": -362.21639334940824,
+          "total_turnover": 39936.56086355435,
+          "mean_daily_turnover": 316.9568322504313,
+          "mean_gross_exposure": 158.7301587301587,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 2,
+          "active_days_pct": 0.015873015873015872
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 1631.9423093384332,
+          "final_equity": 1229.7546211387555,
+          "total_return": -0.2464472462649241,
+          "annualised_return": -0.40576135041933203,
+          "sharpe": -3.2369919234098354,
+          "sortino": -1.5103661445908096,
+          "max_drawdown": -0.24644724626492406,
+          "total_gross_pnl": 153.50898741375318,
+          "total_cost": 555.6966756134309,
+          "total_net_pnl": -402.1876881996778,
+          "total_turnover": 99450.63039746984,
+          "mean_daily_turnover": 725.9170102005098,
+          "mean_gross_exposure": 364.96350364963496,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 5,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 5,
+          "active_days_pct": 0.0364963503649635
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 1994.1587026878415,
+          "final_equity": 1229.7546211387555,
+          "total_return": -0.38332158845671527,
+          "annualised_return": -0.3707263334986447,
+          "sharpe": -3.022618405416754,
+          "sortino": -1.3885513615805125,
+          "max_drawdown": -0.38332158845671527,
+          "total_gross_pnl": 145.08099116981663,
+          "total_cost": 909.4850727189025,
+          "total_net_pnl": -764.404081549086,
+          "total_turnover": 139387.19126102419,
+          "mean_daily_turnover": 529.9893203841224,
+          "mean_gross_exposure": 266.15969581749044,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 7,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 7,
+          "active_days_pct": 0.026615969581749048
+        }
+      }
+    },
+    "core3_relative_fixed_3d_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 3233.104742815829,
+        "final_equity": 3285.1087595165186,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 3685.2702957119805,
+        "cost_through_failure": 10400.161536195457,
+        "entries_through_failure": 63
+      },
+      "cost_diagnostics": {
+        "total_spread_cost": 10141.257426606418,
+        "total_short_carry": 258.90410958904107
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 3874.2520473146947,
+          "final_equity": 3373.7073389967823,
+          "total_return": -0.12919776571192565,
+          "annualised_return": -0.2417034687588977,
+          "sharpe": -3.5294753895988764,
+          "sortino": -1.734428461486593,
+          "max_drawdown": -0.1291977657119257,
+          "total_gross_pnl": -148.33212277195523,
+          "total_cost": 352.2125855459564,
+          "total_net_pnl": -500.5447083179116,
+          "total_turnover": 39789.33453449521,
+          "mean_daily_turnover": 315.7883693213906,
+          "mean_gross_exposure": 476.1904761904761,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 6,
+          "active_days_pct": 0.047619047619047616
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 3373.7073389967823,
+          "final_equity": 3285.1087595165186,
+          "total_return": -0.026261489387698234,
+          "annualised_return": -0.04777261685653833,
+          "sharpe": -0.35281882305520174,
+          "sortino": -0.3172643511915263,
+          "max_drawdown": -0.06639060069082726,
+          "total_gross_pnl": 484.1541019416423,
+          "total_cost": 572.752681421905,
+          "total_net_pnl": -88.59857948026271,
+          "total_turnover": 102420.04945243767,
+          "mean_daily_turnover": 747.5916018426108,
+          "mean_gross_exposure": 1094.8905109489049,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 5,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 15,
+          "active_days_pct": 0.10948905109489052
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 3874.2520473146947,
+          "final_equity": 3285.1087595165186,
+          "total_return": -0.1520663293464659,
+          "annualised_return": -0.14619606474918545,
+          "sharpe": -1.5084151676552309,
+          "sortino": -1.0443559074293196,
+          "max_drawdown": -0.16548931165778308,
+          "total_gross_pnl": 335.821979169687,
+          "total_cost": 924.9652669678615,
+          "total_net_pnl": -589.1432877981744,
+          "total_turnover": 142209.38398693287,
+          "mean_daily_turnover": 540.7200912050679,
+          "mean_gross_exposure": 798.4790874524713,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 7,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 21,
+          "active_days_pct": 0.07984790874524715
+        }
+      }
+    },
+    "core3_relative_fixed_5d_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 3496.6703892880882,
+        "final_equity": 3540.2570867680993,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 3581.8945414414698,
+        "cost_through_failure": 10041.637454673373,
+        "entries_through_failure": 58
+      },
+      "cost_diagnostics": {
+        "total_spread_cost": 9644.377180700769,
+        "total_short_carry": 397.2602739726027
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 3933.548165491593,
+          "final_equity": 3672.006465486498,
+          "total_return": -0.06649002096874257,
+          "annualised_return": -0.12855911904906137,
+          "sharpe": -1.1255774444209974,
+          "sortino": -0.9478476129950397,
+          "max_drawdown": -0.09474580755751358,
+          "total_gross_pnl": 109.45200242847616,
+          "total_cost": 370.9937024335703,
+          "total_net_pnl": -261.54170000509407,
+          "total_turnover": 42907.89256497598,
+          "mean_daily_turnover": 340.53882988076174,
+          "mean_gross_exposure": 793.6507936507934,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 10,
+          "active_days_pct": 0.07936507936507936
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 3672.006465486498,
+          "final_equity": 3540.2570867680993,
+          "total_return": -0.03587939726052303,
+          "annualised_return": -0.06500136815907542,
+          "sharpe": -0.6081245065664403,
+          "sortino": -0.6653337391596982,
+          "max_drawdown": -0.06334376245568328,
+          "total_gross_pnl": 274.08869523295283,
+          "total_cost": 405.8380739513502,
+          "total_net_pnl": -131.74937871839734,
+          "total_turnover": 71481.80151651139,
+          "mean_daily_turnover": 521.7649745730758,
+          "mean_gross_exposure": 1459.8540145985398,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 4,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-07-30"
+          ],
+          "active_days": 20,
+          "active_days_pct": 0.145985401459854
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 3933.548165491593,
+          "final_equity": 3540.2570867680993,
+          "total_return": -0.09998379635306753,
+          "annualised_return": -0.09600961182793977,
+          "sharpe": -0.8725269344443948,
+          "sortino": -0.7667279117911849,
+          "max_drawdown": -0.11106455490647492,
+          "total_gross_pnl": 383.5406976614289,
+          "total_cost": 776.8317763849205,
+          "total_net_pnl": -393.2910787234914,
+          "total_turnover": 114389.69408148737,
+          "mean_daily_turnover": 434.94180259120674,
+          "mean_gross_exposure": 1140.6844106463875,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 6,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-07-30"
+          ],
+          "active_days": 30,
+          "active_days_pct": 0.11406844106463879
+        }
+      }
+    },
+    "core3_relative_fixed_7d_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 4446.156812886617,
+        "final_equity": 4560.074080926579,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 4445.206927874466,
+        "cost_through_failure": 9885.132846947898,
+        "entries_through_failure": 55
+      },
+      "cost_diagnostics": {
+        "total_spread_cost": 9360.475312701321,
+        "total_short_carry": 524.6575342465753
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 4884.86479304275,
+          "final_equity": 4634.798897831839,
+          "total_return": -0.051191978858261544,
+          "annualised_return": -0.09976333901709844,
+          "sharpe": -0.9853966574519312,
+          "sortino": -1.189690171555145,
+          "max_drawdown": -0.06084754125458836,
+          "total_gross_pnl": 86.62467043882405,
+          "total_cost": 336.6905656497361,
+          "total_net_pnl": -250.065895210912,
+          "total_turnover": 42886.265489609905,
+          "mean_daily_turnover": 340.36718642547544,
+          "mean_gross_exposure": 1111.1111111111109,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 14,
+          "active_days_pct": 0.1111111111111111
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 4634.798897831839,
+          "final_equity": 4560.074080926579,
+          "total_return": -0.01612255861634393,
+          "annualised_return": -0.02945524333864935,
+          "sharpe": -0.2893336406373826,
+          "sortino": -0.36312089847465057,
+          "max_drawdown": -0.040701244887554534,
+          "total_gross_pnl": 377.9056807122274,
+          "total_cost": 452.63049761748834,
+          "total_net_pnl": -74.72481690526084,
+          "total_turnover": 74200.42638522977,
+          "mean_daily_turnover": 541.6089517170057,
+          "mean_gross_exposure": 1897.8102189781018,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 4,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-07-30"
+          ],
+          "active_days": 26,
+          "active_days_pct": 0.1897810218978102
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 4884.86479304275,
+          "final_equity": 4560.074080926579,
+          "total_return": -0.06648919179477653,
+          "annualised_return": -0.06379897649446875,
+          "sharpe": -0.6441495917418102,
+          "sortino": -0.7390251688242279,
+          "max_drawdown": -0.0913266717971791,
+          "total_gross_pnl": 464.5303511510515,
+          "total_cost": 789.3210632672245,
+          "total_net_pnl": -324.79071211617287,
+          "total_turnover": 117086.69187483967,
+          "mean_daily_turnover": 445.19654705262235,
+          "mean_gross_exposure": 1520.9125475285166,
+          "mean_active_gross_exposure": 9999.999999999998,
+          "trade_entries": 6,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-07-30"
+          ],
+          "active_days": 40,
+          "active_days_pct": 0.1520912547528517
+        }
+      }
+    },
+    "broad_relative_fixed_5d_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 3598.66701403068,
+        "final_equity": 3713.561555617584,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 3956.8628205655123,
+        "cost_through_failure": 10243.301264947904,
+        "entries_through_failure": 58
+      },
+      "cost_diagnostics": {
+        "total_spread_cost": 9846.040990975302,
+        "total_short_carry": 397.2602739726027
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 4055.637851102623,
+          "final_equity": 3875.1659318728457,
+          "total_return": -0.04449902231302816,
+          "annualised_return": -0.08701788163924096,
+          "sharpe": -0.525496823192623,
+          "sortino": -0.7603106475799707,
+          "max_drawdown": -0.1075555217809678,
+          "total_gross_pnl": 168.43525775243808,
+          "total_cost": 348.9071769822151,
+          "total_net_pnl": -180.47191922977703,
+          "total_turnover": 43046.13318304706,
+          "mean_daily_turnover": 341.6359776432306,
+          "mean_gross_exposure": 793.6507936507936,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 10,
+          "active_days_pct": 0.07936507936507936
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 3875.1659318728457,
+          "final_equity": 3713.561555617584,
+          "total_return": -0.04170256941156558,
+          "annualised_return": -0.07536272257329568,
+          "sharpe": -0.9645780718504089,
+          "sortino": -0.811828142756709,
+          "max_drawdown": -0.07135150409121585,
+          "total_gross_pnl": 239.05126005300912,
+          "total_cost": 400.6556363082687,
+          "total_net_pnl": -161.60437625525955,
+          "total_turnover": 71457.39064205784,
+          "mean_daily_turnover": 521.5867930077214,
+          "mean_gross_exposure": 1459.85401459854,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 4,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-07-30"
+          ],
+          "active_days": 20,
+          "active_days_pct": 0.145985401459854
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 4055.637851102623,
+          "final_equity": 3713.561555617584,
+          "total_return": -0.08434586815783784,
+          "annualised_return": -0.0809650133298051,
+          "sharpe": -0.6505803557932094,
+          "sortino": -0.6083426949152141,
+          "max_drawdown": -0.11267545423162084,
+          "total_gross_pnl": 407.4865178054472,
+          "total_cost": 749.5628132904839,
+          "total_net_pnl": -342.07629548503655,
+          "total_turnover": 114503.5238251049,
+          "mean_daily_turnover": 435.37461530458137,
+          "mean_gross_exposure": 1140.6844106463877,
+          "mean_active_gross_exposure": 10000.0,
+          "trade_entries": 6,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-07-30"
+          ],
+          "active_days": 30,
+          "active_days_pct": 0.11406844106463879
+        }
+      }
+    }
+  },
+  "usefulness_screen": {
+    "definition": {
+      "window": "continuous_post_selection",
+      "minimum_entries": 5,
+      "require_positive_gross_pnl": true,
+      "require_positive_net_pnl": true,
+      "require_net_pnl_above": "core3_long_fixed_5d_1x",
+      "ranking": [
+        "highest total_net_pnl",
+        "lowest max_drawdown"
+      ],
+      "interpretation": "Passing identifies a descriptive candidate only, not a validated strategy."
+    },
+    "long_only_reference_net_pnl": -858.3109082357132,
+    "assessments": {
+      "core3_relative_original_exit_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": true,
+          "minimum_entries": true,
+          "positive_gross_pnl": true,
+          "positive_net_pnl_after_spread_and_carry": false,
+          "net_pnl_above_long_only_reference": true
+        }
+      },
+      "core3_relative_fixed_1d_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": true,
+          "minimum_entries": true,
+          "positive_gross_pnl": true,
+          "positive_net_pnl_after_spread_and_carry": false,
+          "net_pnl_above_long_only_reference": true
+        }
+      },
+      "core3_relative_fixed_3d_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": true,
+          "minimum_entries": true,
+          "positive_gross_pnl": true,
+          "positive_net_pnl_after_spread_and_carry": false,
+          "net_pnl_above_long_only_reference": true
+        }
+      },
+      "core3_relative_fixed_5d_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": true,
+          "minimum_entries": true,
+          "positive_gross_pnl": true,
+          "positive_net_pnl_after_spread_and_carry": false,
+          "net_pnl_above_long_only_reference": true
+        }
+      },
+      "core3_relative_fixed_7d_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": true,
+          "minimum_entries": true,
+          "positive_gross_pnl": true,
+          "positive_net_pnl_after_spread_and_carry": false,
+          "net_pnl_above_long_only_reference": true
+        }
+      },
+      "broad_relative_fixed_5d_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": true,
+          "minimum_entries": true,
+          "positive_gross_pnl": true,
+          "positive_net_pnl_after_spread_and_carry": false,
+          "net_pnl_above_long_only_reference": true
+        }
+      }
+    },
+    "passing_variants": [],
+    "selected_descriptive_candidate": null
+  },
+  "multiplicity": {
+    "candidate_variants_screened": 6,
+    "selection_bias_warning": "Any selected relative-value rule follows three prior retrospective searches and requires independent forward evidence."
+  },
+  "forward_cache_sha256": {
+    "BTCUSDT_1d_forward.parquet": "1d9c2af6fd1f7cc02240653a0e1a65bda7cfff644085ea87dae574e86bab6deb",
+    "ETHUSDT_1d_forward.parquet": "3bafc2fd0545bacc5adfe63c9f276fe8c0b85100e90abaf2443542546c75330f",
+    "BNBUSDT_1d_forward.parquet": "2d91a3a19a9b554e804aeb77fbad62e2433c3123ae4885dc7b95ecb0fa24d087",
+    "SOLUSDT_1d_forward.parquet": "4d86a5147c6b50c821c66dd8e025d1e238c644854a7b628966e9aa259034a2f7",
+    "XRPUSDT_1d_forward.parquet": "36be766d0dc4c53518ba5b913922e1cff58c08b8e99a6033beb013994e76c505",
+    "ADAUSDT_1d_forward.parquet": "43eb7ce9720c2105c3601d4b7d8f044d160add576b1fcbd999cbe94c136f54ea",
+    "AVAXUSDT_1d_forward.parquet": "310ef4f4ec1cb871f52d15216357c9adff192285996f84c27eb84917bc0c0d77",
+    "DOTUSDT_1d_forward.parquet": "21f14d64b8b447ef7d856aea486ff8771b314053bed97e98b688cd624c79786f",
+    "LINKUSDT_1d_forward.parquet": "42ca3693dda666133c38fbd5ef4d9e659895153e40e7ab89128152cb9102cc46",
+    "LTCUSDT_1d_forward.parquet": "a19f0e28b2fa6ee0448c36555f19832d6bbd39383b7482a3e277486b91fada12"
+  },
+  "artifacts": {
+    "comparison": "comparison.csv",
+    "trade_ledger": "trade_ledger.csv",
+    "post_selection_daily": "post_selection_daily.csv",
+    "figure": "cumulative_returns.png",
+    "summary": "summary.json"
+  }
+}

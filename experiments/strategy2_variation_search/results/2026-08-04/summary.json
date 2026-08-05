@@ -1,0 +1,504 @@
+{
+  "status": "completed_bounded_retrospective_search",
+  "requested_end_date": "2026-08-04",
+  "search_spec_digest": "7439a32d424e0cee02693c42bdeb9d00a2a7eb838c36d8b666b1a48e821c4263",
+  "search_spec": {
+    "version": 1,
+    "status": "bounded_retrospective_search",
+    "registered_on": "2026-08-05",
+    "evidence_seen_through": "2026-08-04",
+    "known_prior_trial": {
+      "id": "confirmed_reversal_2x",
+      "result": "non_positive_equity_before_post_selection_anchor"
+    },
+    "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+    "research_question": "At a common 10000 USDT gross exposure, can a simple confirmation rule make the existing BTC notional-share mean-reversion idea economically positive after estimated costs?",
+    "fixed_contract": [
+      "BTC Binance notional-share proxy",
+      "20-day dominance z-score",
+      "126-day rolling threshold lookback",
+      "equal-weight available-altcoin basket",
+      "zero-z-score or seven-day exit",
+      "one-bar execution lag",
+      "lagged 21-day Abdi-Ranaldo half-spread costs"
+    ],
+    "variants": [
+      {
+        "id": "frozen_strategy2_2x",
+        "entry_mode": "accelerating_spike",
+        "gross_util": 2.0,
+        "role": "published_reference"
+      },
+      {
+        "id": "confirmed_reversal_2x",
+        "entry_mode": "confirmed_reversal",
+        "gross_util": 2.0,
+        "role": "preserved_failed_trial"
+      },
+      {
+        "id": "accelerating_spike_1x",
+        "entry_mode": "accelerating_spike",
+        "gross_util": 1.0,
+        "role": "same_risk_baseline"
+      },
+      {
+        "id": "confirmed_reversal_1x",
+        "entry_mode": "confirmed_reversal",
+        "gross_util": 1.0,
+        "role": "candidate"
+      },
+      {
+        "id": "falling_after_extreme_1x",
+        "entry_mode": "falling_after_extreme",
+        "gross_util": 1.0,
+        "role": "candidate"
+      },
+      {
+        "id": "relative_momentum_confirmation_1x",
+        "entry_mode": "relative_momentum_confirmation",
+        "gross_util": 1.0,
+        "role": "candidate"
+      },
+      {
+        "id": "falling_with_relative_momentum_1x",
+        "entry_mode": "falling_with_relative_momentum",
+        "gross_util": 1.0,
+        "role": "candidate"
+      }
+    ],
+    "retrospective_usefulness_screen": {
+      "window": "continuous_post_selection",
+      "minimum_entries": 5,
+      "require_positive_gross_pnl": true,
+      "require_positive_net_pnl": true,
+      "require_net_pnl_above": "accelerating_spike_1x",
+      "require_positive_equity_at_anchor": true,
+      "ranking": [
+        "highest total_net_pnl",
+        "lowest max_drawdown"
+      ],
+      "interpretation": "Passing identifies a descriptive candidate only, not a validated strategy."
+    },
+    "prospective_gate": {
+      "scope_start": "2026-08-05",
+      "minimum_new_entries": 20,
+      "preferred_new_entries": 30,
+      "policy": "No selected retrospective candidate may be described as validated before this independent event-count gate."
+    }
+  },
+  "baseline_frozen_spec_digest": "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879",
+  "baseline_reproduced_exactly": true,
+  "forward_cache_sha256": {
+    "BTCUSDT_1d_forward.parquet": "1d9c2af6fd1f7cc02240653a0e1a65bda7cfff644085ea87dae574e86bab6deb",
+    "ETHUSDT_1d_forward.parquet": "3bafc2fd0545bacc5adfe63c9f276fe8c0b85100e90abaf2443542546c75330f",
+    "BNBUSDT_1d_forward.parquet": "2d91a3a19a9b554e804aeb77fbad62e2433c3123ae4885dc7b95ecb0fa24d087",
+    "SOLUSDT_1d_forward.parquet": "4d86a5147c6b50c821c66dd8e025d1e238c644854a7b628966e9aa259034a2f7",
+    "XRPUSDT_1d_forward.parquet": "36be766d0dc4c53518ba5b913922e1cff58c08b8e99a6033beb013994e76c505",
+    "ADAUSDT_1d_forward.parquet": "43eb7ce9720c2105c3601d4b7d8f044d160add576b1fcbd999cbe94c136f54ea",
+    "AVAXUSDT_1d_forward.parquet": "310ef4f4ec1cb871f52d15216357c9adff192285996f84c27eb84917bc0c0d77",
+    "DOTUSDT_1d_forward.parquet": "21f14d64b8b447ef7d856aea486ff8771b314053bed97e98b688cd624c79786f",
+    "LINKUSDT_1d_forward.parquet": "42ca3693dda666133c38fbd5ef4d9e659895153e40e7ab89128152cb9102cc46",
+    "LTCUSDT_1d_forward.parquet": "a19f0e28b2fa6ee0448c36555f19832d6bbd39383b7482a3e277486b91fada12"
+  },
+  "results": {
+    "frozen_strategy2_2x": {
+      "run_diagnostics": {
+        "minimum_equity": 6208.004522442848,
+        "final_equity": 13043.07140738448,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 28464.898130568246,
+        "cost_through_failure": 25421.82672318378,
+        "entries_through_failure": 61
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 16190.413941897315,
+          "final_equity": 15090.615187072539,
+          "total_return": -0.06792900779261324,
+          "annualised_return": -0.13124366548553756,
+          "sharpe": -2.910320886758789,
+          "sortino": -1.3715303386006288,
+          "max_drawdown": -0.06792900779261322,
+          "total_gross_pnl": -536.7192276146903,
+          "total_cost": 563.0795272100852,
+          "total_net_pnl": -1099.7987548247756,
+          "total_turnover": 80071.5310461817,
+          "mean_daily_turnover": 635.4883416363626,
+          "mean_gross_exposure": 476.1904761904763,
+          "mean_active_gross_exposure": 20000.000000000004,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 3,
+          "active_days_pct": 0.023809523809523808
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 15090.615187072539,
+          "final_equity": 13043.07140738448,
+          "total_return": -0.13568325441378293,
+          "annualised_return": -0.23525760738425416,
+          "sharpe": -2.2239446770178772,
+          "sortino": -1.2990676593902253,
+          "max_drawdown": -0.13568325441378293,
+          "total_gross_pnl": -828.7161110774249,
+          "total_cost": 1218.8276686106387,
+          "total_net_pnl": -2047.5437796880638,
+          "total_turnover": 202027.04031978574,
+          "mean_daily_turnover": 1474.6499293415018,
+          "mean_gross_exposure": 1605.8394160583946,
+          "mean_active_gross_exposure": 20000.000000000004,
+          "trade_entries": 5,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 11,
+          "active_days_pct": 0.08029197080291971
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 16190.413941897315,
+          "final_equity": 13043.07140738448,
+          "total_return": -0.1943954333599952,
+          "annualised_return": -0.18707893203911252,
+          "sharpe": -2.2309886173870095,
+          "sortino": -1.127468493470777,
+          "max_drawdown": -0.19439543335999515,
+          "total_gross_pnl": -1365.4353386921152,
+          "total_cost": 1781.9071958207242,
+          "total_net_pnl": -3147.3425345128394,
+          "total_turnover": 282098.57136596745,
+          "mean_daily_turnover": 1072.618142075922,
+          "mean_gross_exposure": 1064.6387832699622,
+          "mean_active_gross_exposure": 20000.000000000004,
+          "trade_entries": 7,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 14,
+          "active_days_pct": 0.053231939163498096
+        }
+      }
+    },
+    "confirmed_reversal_2x": {
+      "run_diagnostics": {
+        "minimum_equity": 0.0,
+        "final_equity": 0.0,
+        "first_non_positive_date": "2021-05-19",
+        "gross_pnl_through_failure": 3179.108332738082,
+        "cost_through_failure": 15658.561409456302,
+        "entries_through_failure": 27
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "frozen_forward": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "continuous_post_selection": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        }
+      }
+    },
+    "accelerating_spike_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 8104.002261221427,
+        "final_equity": 11521.535703692223,
+        "first_non_positive_date": null,
+        "gross_pnl_through_failure": 14232.449065284123,
+        "cost_through_failure": 12710.91336159189,
+        "entries_through_failure": 61
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-03-20",
+          "n_days": 126,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 13095.206970948642,
+          "final_equity": 12545.307593536256,
+          "total_return": -0.04199241589936864,
+          "annualised_return": -0.08222146880567172,
+          "sharpe": -2.8994771050847077,
+          "sortino": -1.3438579707210898,
+          "max_drawdown": -0.04199241589936861,
+          "total_gross_pnl": -268.35961380734517,
+          "total_cost": 281.5397636050426,
+          "total_net_pnl": -549.8993774123878,
+          "total_turnover": 40035.76552309085,
+          "mean_daily_turnover": 317.7441708181813,
+          "mean_gross_exposure": 238.09523809523816,
+          "mean_active_gross_exposure": 10000.000000000002,
+          "trade_entries": 2,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20"
+          ],
+          "active_days": 3,
+          "active_days_pct": 0.023809523809523808
+        },
+        "frozen_forward": {
+          "status": "completed",
+          "start": "2026-03-21",
+          "end": "2026-08-04",
+          "n_days": 137,
+          "anchor_date": "2026-03-20",
+          "anchor_equity": 12545.307593536256,
+          "final_equity": 11521.535703692223,
+          "total_return": -0.08160596160842737,
+          "annualised_return": -0.14494302949776805,
+          "sharpe": -2.239107839401651,
+          "sortino": -1.298932691471963,
+          "max_drawdown": -0.08160596160842741,
+          "total_gross_pnl": -414.35805553871245,
+          "total_cost": 609.4138343053194,
+          "total_net_pnl": -1023.7718898440319,
+          "total_turnover": 101013.52015989287,
+          "mean_daily_turnover": 737.3249646707509,
+          "mean_gross_exposure": 802.9197080291973,
+          "mean_active_gross_exposure": 10000.000000000002,
+          "trade_entries": 5,
+          "entry_dates": [
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 11,
+          "active_days_pct": 0.08029197080291971
+        },
+        "continuous_post_selection": {
+          "status": "completed",
+          "start": "2025-11-15",
+          "end": "2026-08-04",
+          "n_days": 263,
+          "anchor_date": "2025-11-14",
+          "anchor_equity": 13095.206970948642,
+          "final_equity": 11521.535703692223,
+          "total_return": -0.12017154602806701,
+          "annualised_return": -0.11544760664828424,
+          "sharpe": -2.2588172483709186,
+          "sortino": -1.1371930215099328,
+          "max_drawdown": -0.12017154602806703,
+          "total_gross_pnl": -682.7176693460576,
+          "total_cost": 890.9535979103621,
+          "total_net_pnl": -1573.6712672564197,
+          "total_turnover": 141049.28568298373,
+          "mean_daily_turnover": 536.309071037961,
+          "mean_gross_exposure": 532.3193916349811,
+          "mean_active_gross_exposure": 10000.000000000002,
+          "trade_entries": 7,
+          "entry_dates": [
+            "2025-11-27",
+            "2026-02-20",
+            "2026-03-21",
+            "2026-05-27",
+            "2026-06-19",
+            "2026-06-23",
+            "2026-07-30"
+          ],
+          "active_days": 14,
+          "active_days_pct": 0.053231939163498096
+        }
+      }
+    },
+    "confirmed_reversal_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 0.0,
+        "final_equity": 0.0,
+        "first_non_positive_date": "2022-05-11",
+        "gross_pnl_through_failure": 5459.23691633786,
+        "cost_through_failure": 15461.3836012933,
+        "entries_through_failure": 57
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "frozen_forward": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "continuous_post_selection": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        }
+      }
+    },
+    "falling_after_extreme_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 0.0,
+        "final_equity": 0.0,
+        "first_non_positive_date": "2022-05-11",
+        "gross_pnl_through_failure": 5459.23691633786,
+        "cost_through_failure": 15461.3836012933,
+        "entries_through_failure": 57
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "frozen_forward": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "continuous_post_selection": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        }
+      }
+    },
+    "relative_momentum_confirmation_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 0.0,
+        "final_equity": 0.0,
+        "first_non_positive_date": "2022-06-01",
+        "gross_pnl_through_failure": -1106.4645085304433,
+        "cost_through_failure": 8894.423581978124,
+        "entries_through_failure": 32
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "frozen_forward": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "continuous_post_selection": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        }
+      }
+    },
+    "falling_with_relative_momentum_1x": {
+      "run_diagnostics": {
+        "minimum_equity": 0.0,
+        "final_equity": 0.0,
+        "first_non_positive_date": "2022-08-19",
+        "gross_pnl_through_failure": -8.092427614581993,
+        "cost_through_failure": 9993.80608683105,
+        "entries_through_failure": 34
+      },
+      "windows": {
+        "original_holdout": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "frozen_forward": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        },
+        "continuous_post_selection": {
+          "status": "unavailable",
+          "reason": "Strategy 2 equity was non-positive at the evaluation boundary."
+        }
+      }
+    }
+  },
+  "usefulness_screen": {
+    "definition": {
+      "window": "continuous_post_selection",
+      "minimum_entries": 5,
+      "require_positive_gross_pnl": true,
+      "require_positive_net_pnl": true,
+      "require_net_pnl_above": "accelerating_spike_1x",
+      "require_positive_equity_at_anchor": true,
+      "ranking": [
+        "highest total_net_pnl",
+        "lowest max_drawdown"
+      ],
+      "interpretation": "Passing identifies a descriptive candidate only, not a validated strategy."
+    },
+    "same_risk_baseline_net_pnl": -1573.6712672564197,
+    "assessments": {
+      "confirmed_reversal_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": false,
+          "minimum_entries": false,
+          "positive_gross_pnl": false,
+          "positive_net_pnl": false,
+          "net_pnl_above_same_risk_baseline": false
+        }
+      },
+      "falling_after_extreme_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": false,
+          "minimum_entries": false,
+          "positive_gross_pnl": false,
+          "positive_net_pnl": false,
+          "net_pnl_above_same_risk_baseline": false
+        }
+      },
+      "relative_momentum_confirmation_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": false,
+          "minimum_entries": false,
+          "positive_gross_pnl": false,
+          "positive_net_pnl": false,
+          "net_pnl_above_same_risk_baseline": false
+        }
+      },
+      "falling_with_relative_momentum_1x": {
+        "passed": false,
+        "checks": {
+          "positive_equity_at_anchor": false,
+          "minimum_entries": false,
+          "positive_gross_pnl": false,
+          "positive_net_pnl": false,
+          "net_pnl_above_same_risk_baseline": false
+        }
+      }
+    },
+    "passing_variants": [],
+    "selected_descriptive_candidate": null
+  },
+  "multiplicity": {
+    "candidate_variants_screened": 4,
+    "selection_bias_warning": "The selected candidate, if any, was chosen retrospectively from multiple rules and requires independent forward evidence."
+  },
+  "artifacts": {
+    "comparison": "comparison.csv",
+    "trade_ledger": "trade_ledger.csv",
+    "post_selection_daily": "post_selection_daily.csv",
+    "figure": "cumulative_returns.png",
+    "summary": "summary.json"
+  }
+}

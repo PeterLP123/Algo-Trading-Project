@@ -27,7 +27,10 @@ from wf_trend_pipeline import compute_half_spread_frac, max_drawdown, sharpe_rat
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 SPEC_PATH = PROJECT_ROOT / "forward_validation" / "frozen_strategy2.json"
+EVIDENCE_GATE_PATH = PROJECT_ROOT / "forward_validation" / "strategy2_evidence_gate.json"
 EXPECTED_SPEC_DIGEST = "ebb7be6005a54cc97bbc6a159d3e3f1bcf0dfc6a6d284b4b1ecd8e2dbd1ce879"
+EXPECTED_EVIDENCE_GATE_DIGEST = "695a0dcf5570ef0032fb828c66f0b3a438b3ce89b64fdba3f98a8528a4fb3c71"
+ABDI_RANALDO_CORRECTION = "monthly_corrected"
 HISTORY_FIELDS = ["cg_open", "cg_high", "cg_low", "cg_close", "cg_volume", "cg_notional"]
 OHLCV_TO_HISTORY = {
     "open": "cg_open",
@@ -57,6 +60,83 @@ def load_frozen_spec(path: Path = SPEC_PATH) -> dict[str, Any]:
     if pd.Timestamp(spec["frozen_at"], tz="UTC") != FREEZE_CUTOFF:
         raise FrozenStrategy2Error("Strategy 2 freeze boundary no longer matches Strategy 1.")
     return spec
+
+
+def load_evidence_gate(path: Path = EVIDENCE_GATE_PATH) -> dict[str, Any]:
+    gate = json.loads(path.read_text(encoding="utf-8"))
+    digest = canonical_spec_digest(gate)
+    if digest != EXPECTED_EVIDENCE_GATE_DIGEST:
+        raise FrozenStrategy2Error(
+            "Strategy 2 evidence gate changed: "
+            f"expected {EXPECTED_EVIDENCE_GATE_DIGEST}, found {digest}."
+        )
+    if gate.get("strategy") != "btc_dominance_mean_reversion":
+        raise FrozenStrategy2Error("Strategy 2 evidence gate names the wrong strategy.")
+    if gate.get("metric") != "trade_entries":
+        raise FrozenStrategy2Error("Strategy 2 evidence gate must use qualifying entries.")
+    if gate.get("scope") != "continuous_post_selection":
+        raise FrozenStrategy2Error("Strategy 2 evidence gate must use the continuous window.")
+    minimum = gate.get("minimum_entries")
+    preferred = gate.get("preferred_entries")
+    if not isinstance(minimum, int) or not isinstance(preferred, int):
+        raise FrozenStrategy2Error("Strategy 2 evidence thresholds must be integers.")
+    if minimum <= 0 or preferred <= minimum:
+        raise FrozenStrategy2Error(
+            "Strategy 2 evidence thresholds must be positive and strictly ordered."
+        )
+    return gate
+
+
+def assess_entry_count_gate(
+    metrics: dict[str, Any],
+    gate: dict[str, Any],
+) -> dict[str, Any]:
+    observed = int(metrics["trade_entries"])
+    n_days = int(metrics["n_days"])
+    minimum = int(gate["minimum_entries"])
+    preferred = int(gate["preferred_entries"])
+    if observed < 0 or n_days <= 0:
+        raise ValueError("Entry-count evidence requires non-negative entries and positive days.")
+
+    if observed < minimum:
+        status = "below_minimum"
+    elif observed < preferred:
+        status = "minimum_met"
+    else:
+        status = "preferred_met"
+
+    estimate = {
+        "basis_entries": observed,
+        "basis_days": n_days,
+        "observed_days_per_entry": None,
+        "estimated_total_days_to_minimum": None,
+        "estimated_additional_days_to_minimum": None,
+        "planning_only": True,
+    }
+    if observed:
+        days_per_entry = n_days / observed
+        estimate.update(
+            {
+                "observed_days_per_entry": days_per_entry,
+                "estimated_total_days_to_minimum": round(minimum * days_per_entry),
+                "estimated_additional_days_to_minimum": round(
+                    max(minimum - observed, 0) * days_per_entry
+                ),
+            }
+        )
+
+    return {
+        "status": status,
+        "observed_entries": observed,
+        "minimum_entries": minimum,
+        "preferred_entries": preferred,
+        "remaining_to_minimum": max(minimum - observed, 0),
+        "remaining_to_preferred": max(preferred - observed, 0),
+        "minimum_met": observed >= minimum,
+        "preferred_met": observed >= preferred,
+        "interpretation": gate["policy"][status],
+        "planning_estimate": estimate,
+    }
 
 
 def load_frozen_history(path: Path, spec: dict[str, Any]) -> dict[str, pd.DataFrame]:
@@ -138,9 +218,28 @@ def build_combined_history(
 def build_frozen_strategy2_run(
     combined: dict[str, pd.DataFrame],
     spec: dict[str, Any],
+    *,
+    entry_mode: str = "accelerating_spike",
+    gross_util: float | None = None,
+    alt_universe: list[str] | None = None,
+    exit_mode: str = "z_or_max_hold",
+    max_hold: int | None = None,
+    position_mode: str = "long_alts",
+    short_carry_rate_annual: float = 0.0,
+    cost_mode: str = "abdi_ranaldo",
+    fixed_one_way_cost_bps: float = 0.0,
+    spread_correction: str = ABDI_RANALDO_CORRECTION,
 ) -> dict[str, Any]:
     tickers = list(spec["symbols"])
-    alt_tickers = [ticker for ticker in tickers if ticker != "BTC"]
+    registered_alt_tickers = [ticker for ticker in tickers if ticker != "BTC"]
+    alt_tickers = (
+        registered_alt_tickers if alt_universe is None else list(alt_universe)
+    )
+    if not alt_tickers or len(alt_tickers) != len(set(alt_tickers)):
+        raise ValueError("Strategy 2 requires a non-empty, unique altcoin universe.")
+    unknown_tickers = set(alt_tickers).difference(registered_alt_tickers)
+    if unknown_tickers:
+        raise ValueError(f"Strategy 2 altcoin universe contains: {sorted(unknown_tickers)}")
     cleaned = {
         ticker: pd.DataFrame(
             {
@@ -154,25 +253,36 @@ def build_frozen_strategy2_run(
         for ticker in tickers
     }
     features = build_s2_features(combined["cg_close"], combined["cg_notional"])
-    half_spread = compute_half_spread_frac(combined["cg_close"], cleaned, tickers)
+    half_spread = compute_half_spread_frac(
+        combined["cg_close"], cleaned, tickers, correction=spread_correction
+    )
     parameters = spec["parameters"]
+    resolved_gross_util = (
+        float(parameters["gross_util"]) if gross_util is None else float(gross_util)
+    )
     params = make_s2_params(
         parameters["entry_pct"],
         parameters["lookback"],
         parameters["exit_z"],
-        parameters["max_hold"],
+        parameters["max_hold"] if max_hold is None else int(max_hold),
         parameters["roc_window"],
         parameters["roc_pct"],
         parameters["crash_threshold"],
-        gross_util=parameters["gross_util"],
+        gross_util=resolved_gross_util,
     )
+    params["entry_mode"] = entry_mode
+    params["exit_mode"] = exit_mode
+    params["position_mode"] = position_mode
+    params["short_carry_rate_annual"] = float(short_carry_rate_annual)
+    params["cost_mode"] = cost_mode
+    params["fixed_one_way_cost_bps"] = float(fixed_one_way_cost_bps)
     return run_s2_strategy(
         features,
         params,
         alt_tickers,
         spec["execution"]["initial_capital"],
         half_spread,
-        gross_util=parameters["gross_util"],
+        gross_util=resolved_gross_util,
     )
 
 
@@ -296,6 +406,7 @@ def run_forward_validation(
 ) -> dict[str, Any]:
     validate_output_target(output_dir)
     spec = load_frozen_spec()
+    evidence_gate = load_evidence_gate()
     history = load_frozen_history(history_path, spec)
     combined, cache_hashes = build_combined_history(
         history,
@@ -320,6 +431,10 @@ def run_forward_validation(
         anchor_date=POST_SELECTION_ANCHOR,
         trading_days=trading_days,
     )
+    post_selection_evidence_gate = assess_entry_count_gate(
+        post_selection_metrics,
+        evidence_gate,
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     daily_path = output_dir / "strategy2_daily.csv"
@@ -335,9 +450,13 @@ def run_forward_validation(
         "requested_end_date": str(end_date.date()),
         "frozen_spec_digest": EXPECTED_SPEC_DIGEST,
         "frozen_spec": spec,
+        "spread_correction": ABDI_RANALDO_CORRECTION,
+        "evidence_gate_digest": EXPECTED_EVIDENCE_GATE_DIGEST,
+        "evidence_gate": evidence_gate,
         "forward_cache_sha256": cache_hashes,
         "metrics": metrics,
         "post_selection_metrics": post_selection_metrics,
+        "post_selection_evidence_gate": post_selection_evidence_gate,
         "artifacts": {
             "daily": daily_path.name,
             "post_selection_daily": post_selection_daily_path.name,
@@ -384,6 +503,12 @@ def main() -> None:
     print(f"  Sharpe: {post_selection['sharpe']:.3f}")
     print(f"  Max drawdown: {post_selection['max_drawdown']:.2%}")
     print(f"  Net PnL: {post_selection['total_net_pnl']:.2f} USDT")
+    gate = summary["post_selection_evidence_gate"]
+    print(
+        "  Entry-count gate: "
+        f"{gate['observed_entries']}/{gate['minimum_entries']} minimum "
+        f"({gate['status']}; {gate['preferred_entries']} preferred)"
+    )
 
 
 if __name__ == "__main__":

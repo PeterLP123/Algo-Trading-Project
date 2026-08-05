@@ -247,6 +247,8 @@ def test_latest_snapshot_includes_continuous_post_selection_evidence() -> None:
     forward_metrics = summary["metrics"]
     combined_metrics = summary["post_selection_metrics"]
 
+    assert summary["spread_correction"] == fv.ABDI_RANALDO_CORRECTION
+    assert fv.ABDI_RANALDO_CORRECTION == "monthly_corrected"
     assert len(forward) == forward_metrics["n_days"] == 137
     assert len(combined) == combined_metrics["n_days"] == 263
     assert combined["date"].min() == fv.ORIGINAL_HOLDOUT_START

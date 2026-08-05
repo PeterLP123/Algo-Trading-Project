@@ -8,7 +8,31 @@ import cvxpy as cp
 from sklearn.covariance import LedoitWolf
 
 
-def abdi_ranaldo_spread(frame: pd.DataFrame, window: int = 21) -> pd.Series:
+ABDI_RANALDO_CORRECTIONS = {"monthly_corrected", "two_day_corrected"}
+
+
+def abdi_ranaldo_spread(
+    frame: pd.DataFrame,
+    window: int = 21,
+    *,
+    correction: str = "monthly_corrected",
+) -> pd.Series:
+    """Estimate the full proportional spread using Abdi--Ranaldo (2017).
+
+    ``monthly_corrected`` implements Equation 10 by flooring a negative
+    window-level second moment at zero before taking its square root.
+    ``two_day_corrected`` implements Equation 11 by flooring each negative
+    two-day estimate at zero, taking its square root, and then averaging.
+
+    The former implementation used ``abs`` on the window-level moment.  That
+    reflects negative estimation noise above zero and is not one of the
+    corrections proposed in the paper, so it is intentionally unsupported.
+    """
+    if correction not in ABDI_RANALDO_CORRECTIONS:
+        raise ValueError(
+            f"Unknown Abdi-Ranaldo correction {correction!r}; expected one of "
+            f"{sorted(ABDI_RANALDO_CORRECTIONS)}."
+        )
     cols = {col.lower(): col for col in frame.columns}
     required = {"high", "low", "close"}
     missing = required.difference(cols)
@@ -24,8 +48,17 @@ def abdi_ranaldo_spread(frame: pd.DataFrame, window: int = 21) -> pd.Series:
     log_close = np.log(close.where(close > 0))
 
     midpoint = (log_high + log_low) / 2.0
-    s2 = 4.0 * (log_close.shift(1) - midpoint.shift(1)) * (log_close.shift(1) - midpoint)
-    spread = np.sqrt(s2.rolling(window=window, min_periods=window).mean().abs())
+    s2 = 4.0 * (log_close.shift(1) - midpoint.shift(1)) * (
+        log_close.shift(1) - midpoint
+    )
+    if correction == "monthly_corrected":
+        spread = np.sqrt(
+            s2.rolling(window=window, min_periods=window).mean().clip(lower=0.0)
+        )
+    else:
+        spread = np.sqrt(s2.clip(lower=0.0)).rolling(
+            window=window, min_periods=window
+        ).mean()
     return spread.replace([np.inf, -np.inf], np.nan).rename("abdi_ranaldo_spread")
 
 
@@ -33,10 +66,16 @@ def compute_half_spread_frac(
     asset_panel_slice: pd.DataFrame,
     cleaned_frames: dict[str, pd.DataFrame],
     symbols: list[str],
+    *,
+    correction: str = "monthly_corrected",
 ) -> pd.DataFrame:
     ar_cols = []
     for s in symbols:
-        ar_cols.append(abdi_ranaldo_spread(cleaned_frames[s]).reindex(asset_panel_slice.index))
+        ar_cols.append(
+            abdi_ranaldo_spread(cleaned_frames[s], correction=correction).reindex(
+                asset_panel_slice.index
+            )
+        )
     ar_wide = pd.concat(ar_cols, axis=1, keys=symbols)
     half_spread = 0.5 * ar_wide
     return half_spread.shift(1).replace([np.inf, -np.inf], np.nan)

@@ -1,0 +1,22 @@
+variant,role,entry_mode,gross_util,window,status,failure_reason,n_days,total_return,annualised_return,sharpe,sortino,max_drawdown,total_gross_pnl,total_cost,total_net_pnl,total_turnover,mean_gross_exposure,mean_active_gross_exposure,trade_entries,active_days
+frozen_strategy2_2x,published_reference,accelerating_spike,2,original_holdout,completed,,126,-0.06792900779,-0.1312436655,-2.910320887,-1.371530339,-0.06792900779,-536.7192276,563.0795272,-1099.798755,80071.53105,476.1904762,20000,2,3
+frozen_strategy2_2x,published_reference,accelerating_spike,2,frozen_forward,completed,,137,-0.1356832544,-0.2352576074,-2.223944677,-1.299067659,-0.1356832544,-828.7161111,1218.827669,-2047.54378,202027.0403,1605.839416,20000,5,11
+frozen_strategy2_2x,published_reference,accelerating_spike,2,continuous_post_selection,completed,,263,-0.1943954334,-0.187078932,-2.230988617,-1.127468493,-0.1943954334,-1365.435339,1781.907196,-3147.342535,282098.5714,1064.638783,20000,7,14
+confirmed_reversal_2x,preserved_failed_trial,confirmed_reversal,2,original_holdout,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+confirmed_reversal_2x,preserved_failed_trial,confirmed_reversal,2,frozen_forward,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+confirmed_reversal_2x,preserved_failed_trial,confirmed_reversal,2,continuous_post_selection,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+accelerating_spike_1x,same_risk_baseline,accelerating_spike,1,original_holdout,completed,,126,-0.0419924159,-0.08222146881,-2.899477105,-1.343857971,-0.0419924159,-268.3596138,281.5397636,-549.8993774,40035.76552,238.0952381,10000,2,3
+accelerating_spike_1x,same_risk_baseline,accelerating_spike,1,frozen_forward,completed,,137,-0.08160596161,-0.1449430295,-2.239107839,-1.298932691,-0.08160596161,-414.3580555,609.4138343,-1023.77189,101013.5202,802.919708,10000,5,11
+accelerating_spike_1x,same_risk_baseline,accelerating_spike,1,continuous_post_selection,completed,,263,-0.120171546,-0.1154476066,-2.258817248,-1.137193022,-0.120171546,-682.7176693,890.9535979,-1573.671267,141049.2857,532.3193916,10000,7,14
+confirmed_reversal_1x,candidate,confirmed_reversal,1,original_holdout,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+confirmed_reversal_1x,candidate,confirmed_reversal,1,frozen_forward,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+confirmed_reversal_1x,candidate,confirmed_reversal,1,continuous_post_selection,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+falling_after_extreme_1x,candidate,falling_after_extreme,1,original_holdout,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+falling_after_extreme_1x,candidate,falling_after_extreme,1,frozen_forward,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+falling_after_extreme_1x,candidate,falling_after_extreme,1,continuous_post_selection,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+relative_momentum_confirmation_1x,candidate,relative_momentum_confirmation,1,original_holdout,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+relative_momentum_confirmation_1x,candidate,relative_momentum_confirmation,1,frozen_forward,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+relative_momentum_confirmation_1x,candidate,relative_momentum_confirmation,1,continuous_post_selection,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+falling_with_relative_momentum_1x,candidate,falling_with_relative_momentum,1,original_holdout,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+falling_with_relative_momentum_1x,candidate,falling_with_relative_momentum,1,frozen_forward,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,
+falling_with_relative_momentum_1x,candidate,falling_with_relative_momentum,1,continuous_post_selection,unavailable,Strategy 2 equity was non-positive at the evaluation boundary.,,,,,,,,,,,,,,

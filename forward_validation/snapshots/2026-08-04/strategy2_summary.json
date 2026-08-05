@@ -1,6 +1,6 @@
 {
   "status": "frozen_strategy2_forward_validation",
-  "generated_at_utc": "2026-08-05T10:15:24.207970+00:00",
+  "generated_at_utc": "2026-08-05T13:12:46.257668+00:00",
   "data_source": "Binance daily OHLCV via ccxt",
   "freeze_cutoff": "2026-03-20",
   "requested_end_date": "2026-08-04",
@@ -49,6 +49,30 @@
       "end": "2026-03-20"
     }
   },
+  "spread_correction": "monthly_corrected",
+  "evidence_gate_digest": "695a0dcf5570ef0032fb828c66f0b3a438b3ce89b64fdba3f98a8528a4fb3c71",
+  "evidence_gate": {
+    "version": 1,
+    "strategy": "btc_dominance_mean_reversion",
+    "metric": "trade_entries",
+    "scope": "continuous_post_selection",
+    "minimum_entries": 20,
+    "preferred_entries": 30,
+    "registered_on": "2026-08-05",
+    "registration_basis": {
+      "snapshot_end": "2026-08-04",
+      "observed_entries": 7
+    },
+    "policy": {
+      "below_minimum": "Treat performance metrics as descriptive economic outcomes only; do not claim reliable performance inference.",
+      "minimum_met": "Bare interpretive minimum reached; retain substantial uncertainty and avoid strong validation claims.",
+      "preferred_met": "Preferred event-count threshold reached; inference still remains conditional on the observed market regimes."
+    },
+    "planning_estimate": {
+      "method": "Linear extrapolation from observed entries per completed daily observation.",
+      "use": "Planning only; this is not a forecast, deadline, or guarantee that qualifying entries will occur."
+    }
+  },
   "forward_cache_sha256": {
     "BTCUSDT_1d_forward.parquet": "1d9c2af6fd1f7cc02240653a0e1a65bda7cfff644085ea87dae574e86bab6deb",
     "ETHUSDT_1d_forward.parquet": "3bafc2fd0545bacc5adfe63c9f276fe8c0b85100e90abaf2443542546c75330f",
@@ -66,16 +90,16 @@
     "end": "2026-08-04",
     "n_days": 137,
     "anchor_date": "2026-03-20",
-    "anchor_equity": 15090.615187072539,
-    "final_equity": 13043.07140738448,
-    "total_return": -0.13568325441378293,
-    "annualised_return": -0.23525760738425416,
-    "sharpe": -2.2239446770178772,
-    "sortino": -1.2990676593902253,
-    "max_drawdown": -0.13568325441378293,
+    "anchor_equity": 26538.29564378265,
+    "final_equity": 25445.88635317016,
+    "total_return": -0.04116350594912521,
+    "annualised_return": -0.07440576328003756,
+    "sharpe": -1.2918727706120634,
+    "sortino": -0.733109902390719,
+    "max_drawdown": -0.04223580589633571,
     "total_gross_pnl": -828.7161110774249,
-    "total_cost": 1218.8276686106387,
-    "total_net_pnl": -2047.5437796880638,
+    "total_cost": 263.6931795350709,
+    "total_net_pnl": -1092.4092906124959,
     "total_turnover": 202027.04031978574,
     "mean_daily_turnover": 1474.6499293415018,
     "mean_gross_exposure": 1605.8394160583946,
@@ -96,16 +120,16 @@
     "end": "2026-08-04",
     "n_days": 263,
     "anchor_date": "2025-11-14",
-    "anchor_equity": 16190.413941897315,
-    "final_equity": 13043.07140738448,
-    "total_return": -0.1943954333599952,
-    "annualised_return": -0.18707893203911252,
-    "sharpe": -2.2309886173870095,
-    "sortino": -1.127468493470777,
-    "max_drawdown": -0.19439543335999515,
+    "anchor_equity": 27350.856921649156,
+    "final_equity": 25445.88635317016,
+    "total_return": -0.06964939248287849,
+    "annualised_return": -0.0668359429680121,
+    "sharpe": -1.5207033119163504,
+    "sortino": -0.7331581556164031,
+    "max_drawdown": -0.06964939248287846,
     "total_gross_pnl": -1365.4353386921152,
-    "total_cost": 1781.9071958207242,
-    "total_net_pnl": -3147.3425345128394,
+    "total_cost": 539.5352297868865,
+    "total_net_pnl": -1904.9705684790017,
     "total_turnover": 282098.57136596745,
     "mean_daily_turnover": 1072.618142075922,
     "mean_gross_exposure": 1064.6387832699622,
@@ -122,6 +146,25 @@
     ],
     "active_days": 14,
     "active_days_pct": 0.053231939163498096
+  },
+  "post_selection_evidence_gate": {
+    "status": "below_minimum",
+    "observed_entries": 7,
+    "minimum_entries": 20,
+    "preferred_entries": 30,
+    "remaining_to_minimum": 13,
+    "remaining_to_preferred": 23,
+    "minimum_met": false,
+    "preferred_met": false,
+    "interpretation": "Treat performance metrics as descriptive economic outcomes only; do not claim reliable performance inference.",
+    "planning_estimate": {
+      "basis_entries": 7,
+      "basis_days": 263,
+      "observed_days_per_entry": 37.57142857142857,
+      "estimated_total_days_to_minimum": 751,
+      "estimated_additional_days_to_minimum": 488,
+      "planning_only": true
+    }
   },
   "artifacts": {
     "daily": "strategy2_daily.csv",
